@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>탐색보드 | Golden Step</title>
+
+  <link rel="stylesheet" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./css/search-board.css">
+</head>
+
+<body>
+
+  <!-- 공통 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+
+      <a class="header-logo" href="./index.html">
+        <img src="./assets/images/golden-step-logo.png" alt="Golden Step">
+      </a>
+
+      <button class="emergency-button" type="button" aria-label="112 긴급 신고"></button>
+
+    </div>
+  </header>
+
+  <main class="board-page">
+
+    <section class="board-container">
+
+      <!-- 탐색보드 제목 -->
+      <div class="board-heading">
+
+        <span class="board-label">
+          SEARCH BOARD
+        </span>
+
+        <h1>탐색보드</h1>
+
+        <p>
+          경과 시간, 우선 확인 지역, 예상 이동 반경을 한 화면에서 확인할 수 있습니다.
+        </p>
+
+      </div>
+
+      <!-- 요약 카드 -->
+      <section class="summary-grid" aria-label="탐색 요약 정보">
+
+        <!-- 경과 시간 -->
+        <article class="summary-card">
+
+          <div class="summary-icon summary-icon-time">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8"></circle>
+
+              <path d="M12 7V12L15.5 14"></path>
+            </svg>
+
+          </div>
+
+          <div class="summary-content">
+
+            <span class="summary-title">
+              경과 시간
+            </span>
+
+            <strong id="elapsed-time">
+              2시간 30분
+            </strong>
+
+          </div>
+
+          <span class="summary-arrow" aria-hidden="true">
+            ›
+          </span>
+
+        </article>
+
+        <!-- 우선 확인 지역 -->
+        <article class="summary-card">
+
+          <div class="summary-icon summary-icon-location">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21S18.5 15 18.5 9.5A6.5 6.5 0 1 0 5.5 9.5C5.5 15 12 21 12 21Z"></path>
+
+              <circle cx="12" cy="9.5" r="2.2"></circle>
+            </svg>
+
+          </div>
+
+          <div class="summary-content">
+
+            <span class="summary-title">
+              우선 확인 지역
+            </span>
+
+            <strong id="priority-location">
+              한강공원 산책로
+            </strong>
+
+          </div>
+
+          <span class="summary-arrow" aria-hidden="true">
+            ›
+          </span>
+
+        </article>
+
+        <!-- 예상 이동 반경 -->
+        <article class="summary-card">
+
+          <div class="summary-icon summary-icon-area">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="7"></circle>
+
+              <circle cx="12" cy="12" r="2"></circle>
+
+              <path d="M12 5V3"></path>
+
+              <path d="M12 21V19"></path>
+
+              <path d="M5 12H3"></path>
+
+              <path d="M21 12H19"></path>
+            </svg>
+
+          </div>
+
+          <div class="summary-content">
+
+            <span class="summary-title">
+              예상 이동 반경
+            </span>
+
+            <strong>
+              약
+              <span id="reachable-radius">
+                3.5
+              </span>
+              km
+            </strong>
+
+          </div>
+
+          <span class="summary-arrow" aria-hidden="true">
+            ›
+          </span>
+
+        </article>
+
+      </section>
+
+      <!-- 지도 영역 -->
+      <section class="board-map-section">
+
+        <div class="map-heading">
+
+          <div>
+
+            <span class="section-label">
+              PRIORITY MAP
+            </span>
+
+            <h2>
+              탐색 우선 지역
+            </h2>
+
+          </div>
+
+          <div class="priority-legend">
+
+            <span>
+              <i class="legend-color legend-high"></i>
+              높음
+            </span>
+
+            <span>
+              <i class="legend-color legend-medium"></i>
+              중간
+            </span>
+
+            <span>
+              <i class="legend-color legend-low"></i>
+              낮음
+            </span>
+
+          </div>
+
+        </div>
+
+        <!-- 탐색결과 화면과 동일한 지도 구조 -->
+        <div class="map-placeholder">
+
+          <div class="mock-map-base">
+
+            <div class="map-district district-one"></div>
+            <div class="map-district district-two"></div>
+            <div class="map-district district-three"></div>
+            <div class="map-district district-four"></div>
+
+            <div class="map-park park-one"></div>
+            <div class="map-park park-two"></div>
+            <div class="map-park park-three"></div>
+
+            <div class="map-river"></div>
+
+            <span class="map-place-name place-school">
+              중앙초등학교
+            </span>
+
+            <span class="map-place-name place-park">
+              OO공원
+            </span>
+
+            <span class="map-place-name place-river">
+              한강공원
+            </span>
+
+            <span class="map-place-name place-district-one">
+              용산구
+            </span>
+
+            <span class="map-place-name place-district-two">
+              동작구
+            </span>
+
+          </div>
+
+          <!-- 낮은 우선도 -->
+          <div class="heatmap heatmap-low heatmap-one"></div>
+          <div class="heatmap heatmap-low heatmap-two"></div>
+          <div class="heatmap heatmap-low heatmap-three"></div>
+          <div class="heatmap heatmap-low heatmap-four"></div>
+          <div class="heatmap heatmap-low heatmap-five"></div>
+
+          <!-- 중간 우선도 -->
+          <div class="heatmap heatmap-medium"></div>
+
+          <!-- 높은 우선도 -->
+          <div class="heatmap heatmap-high"></div>
+
+          <!-- 탐색 방향 -->
+          <div class="search-radius radius-one"></div>
+          <div class="search-radius radius-two"></div>
+          <div class="search-radius radius-three"></div>
+
+          <!-- 마지막 확인 위치 -->
+          <div class="map-pin">
+
+            <svg viewBox="0 0 32 40" aria-hidden="true">
+              <path d="M16 1C8.3 1 2 7.3 2 15C2 25.5 16 39 16 39C16 39 30 25.5 30 15C30 7.3 23.7 1 16 1Z"></path>
+
+              <circle cx="16" cy="15" r="5"></circle>
+            </svg>
+
+          </div>
+
+          <!-- 마지막 확인 위치 정보 -->
+          <div class="location-card">
+
+            <strong>
+              마지막 확인 위치
+            </strong>
+
+            <span>
+              2026. 09. 26 14:32
+            </span>
+
+          </div>
+
+          <!-- 지도 내부 범례 -->
+          <div class="map-legend">
+
+            <span class="map-legend-title">
+              탐색 우선도
+            </span>
+
+            <div class="map-legend-items">
+
+              <span>
+                <i class="legend-color legend-high"></i>
+                높음
+              </span>
+
+              <span>
+                <i class="legend-color legend-medium"></i>
+                중간
+              </span>
+
+              <span>
+                <i class="legend-color legend-low"></i>
+                낮음
+              </span>
+
+            </div>
+
+          </div>
+
+          <!-- 지도 API 안내 -->
+          <div class="map-api-message">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21S19 14.5 19 8.5A7 7 0 1 0 5 8.5C5 14.5 12 21 12 21Z"></path>
+
+              <circle cx="12" cy="8.5" r="2.5"></circle>
+            </svg>
+
+            <span>
+              지도 API 연동 예정
+            </span>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- 하단 버튼 -->
+      <section class="board-actions">
+
+        <button class="board-button result-button" id="result-button" type="button">
+
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6L9 4L15 6L20 4V18L15 20L9 18L4 20V6Z"></path>
+
+            <path d="M9 4V18"></path>
+            <path d="M15 6V20"></path>
+          </svg>
+
+          <span>
+            탐색결과 보기
+          </span>
+
+        </button>
+
+        <button class="board-button new-search-button" id="new-search-button" type="button">
+
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="5.5"></circle>
+
+            <path d="M15 15L20 20"></path>
+          </svg>
+
+          <span>
+            새 탐색 시작
+          </span>
+
+        </button>
+
+      </section>
+
+    </section>
+
+  </main>
+
+  <script src="./js/search-board.js"></script>
+
+</body>
+
+</html>
