@@ -4,6 +4,8 @@ const progressTrack = document.querySelector(".progress-track");
 const analysisSteps = document.querySelectorAll(".analysis-step");
 
 let progress = 0;
+let progressInterval = null;
+let isCompleted = false;
 
 const getActiveStep = () => {
   if (progress < 25) {
@@ -23,6 +25,10 @@ const getActiveStep = () => {
 
 const updateStepIcon = (step, state) => {
   const icon = step.querySelector(".step-icon");
+
+  if (!icon) {
+    return;
+  }
 
   icon.innerHTML = "";
 
@@ -46,6 +52,21 @@ const updateStepIcon = (step, state) => {
 };
 
 const updateSteps = () => {
+  if (progress >= 100) {
+    analysisSteps.forEach((step) => {
+      step.classList.remove(
+        "is-active",
+        "is-processing"
+      );
+
+      step.classList.add("is-complete");
+
+      updateStepIcon(step, "complete");
+    });
+
+    return;
+  }
+
   const activeStep = getActiveStep();
 
   analysisSteps.forEach((step) => {
@@ -91,18 +112,54 @@ const updateProgress = () => {
   updateSteps();
 };
 
-const increaseProgress = () => {
-  if (progress >= 99) {
+const moveToSearchResult = () => {
+  window.location.href = "./search-result.html";
+};
+
+const completeAnalysis = () => {
+  if (isCompleted) {
     return;
   }
 
-  const increaseAmount = Math.floor(Math.random() * 3) + 1;
-
-  progress = Math.min(progress + increaseAmount, 99);
+  isCompleted = true;
+  progress = 100;
 
   updateProgress();
+
+  if (progressInterval) {
+    clearInterval(progressInterval);
+  }
+
+  window.setTimeout(
+    moveToSearchResult,
+    800
+  );
+};
+
+const increaseProgress = () => {
+  if (progress >= 100) {
+    completeAnalysis();
+    return;
+  }
+
+  const increaseAmount =
+    Math.floor(Math.random() * 3) + 1;
+
+  progress = Math.min(
+    progress + increaseAmount,
+    100
+  );
+
+  updateProgress();
+
+  if (progress >= 100) {
+    completeAnalysis();
+  }
 };
 
 updateProgress();
 
-setInterval(increaseProgress, 650);
+progressInterval = window.setInterval(
+  increaseProgress,
+  120
+);

@@ -2,6 +2,7 @@
   const timeRange = document.querySelector("#time-range");
   const selectedTime = document.querySelector("#selected-time");
   const detailButtons = document.querySelectorAll(".detail-button");
+  const searchBoardButton = document.querySelector("#search-board-button");
 
   if (!timeRange || !selectedTime) {
     return;
@@ -145,4 +146,14 @@
   });
 
   updateTime();
+
+  if (searchBoardButton) {
+    searchBoardButton.addEventListener(
+      "click",
+      () => {
+        window.location.href =
+          "./search-board.html";
+      }
+    );
+  }
 })();
