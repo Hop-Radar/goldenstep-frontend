@@ -242,15 +242,7 @@ const handleSearchFormSubmit = (event) => {
     return;
   }
 
-  console.log({
-    lastLocation: lastLocation.value,
-    lastSeenTime: lastSeenTime.value,
-    personType: getCheckedValue("personType"),
-    personAge: personAge.value || null,
-    disabilityStatus: getCheckedValue("disabilityStatus"),
-    diseaseStatus: getCheckedValue("diseaseStatus"),
-    additionalInfo: searchForm.elements.additionalInfo.value
-  });
+  window.location.href = "./analysis-loading.html";
 };
 
 initializeTimeOptions();
