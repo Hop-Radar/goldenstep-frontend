@@ -112,3 +112,85 @@ img {
 .btn-primary:hover {
   opacity: 0.9;
 }
+
+.header {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 64px;
+  background: linear-gradient(90deg,
+      #ffffff 0%,
+      #f8fbff 35%,
+      #eef6ff 70%,
+      #dceeff 100%);
+  border-bottom: 1px solid rgb(219 234 254 / 70%);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100% - 64px, 1340px);
+  height: 100%;
+  margin: 0 auto;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.header-logo img {
+  display: block;
+  width: 170px;
+  height: auto;
+  object-fit: contain;
+}
+
+.emergency-button {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  background-image: url("../assets/icons/emergency-button.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+@media (max-width: 900px) {
+  .header-inner {
+    width: min(100% - 40px, 1340px);
+  }
+}
+
+.header-logo img {
+  width: 205px;
+}
+
+.emergency-button {
+  width: 58px;
+  height: 58px;
+}
+
+@media (max-width: 600px) {
+  .header {
+    height: 76px;
+  }
+}
+
+.header-inner {
+  width: calc(100% - 32px);
+}
+
+.header-logo img {
+  width: 165px;
+}
+
+.emergency-button {
+  width: 48px;
+  height: 48px;
+}
