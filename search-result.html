@@ -306,39 +306,7 @@
               <span aria-hidden="true">→</span>
             </button>
           </section>
-          <div class="complete-modal" id="complete-modal" hidden>
-            <div class="complete-modal-backdrop" data-close-complete-modal></div>
 
-            <div class="complete-modal-content" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
-
-              <div class="complete-modal-icon">
-                ✓
-              </div>
-
-              <h2 id="complete-modal-title">
-                이 지역의 탐색을 완료하셨나요?
-              </h2>
-
-              <strong class="complete-modal-location" id="complete-modal-location"></strong>
-
-              <p>
-                완료한 지역은 탐색 완료 목록으로 이동합니다.
-              </p>
-
-              <div class="complete-modal-actions">
-
-                <button class="complete-modal-cancel" id="complete-modal-cancel" type="button">
-                  취소
-                </button>
-
-                <button class="complete-modal-confirm" id="complete-modal-confirm" type="button">
-                  탐색 완료
-                </button>
-
-              </div>
-
-            </div>
-          </div>
   </main>
 
   <div class="detail-drawer-overlay" id="detail-drawer-overlay"></div>
@@ -446,6 +414,40 @@
     </div>
 
   </aside>
+
+  <div class="complete-modal" id="complete-modal" hidden>
+    <div class="complete-modal-backdrop" data-close-complete-modal></div>
+
+    <div class="complete-modal-content" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+
+      <div class="complete-modal-icon">
+        ✓
+      </div>
+
+      <h2 id="complete-modal-title">
+        이 지역의 탐색을 완료하셨나요?
+      </h2>
+
+      <strong class="complete-modal-location" id="complete-modal-location"></strong>
+
+      <p>
+        완료한 지역은 탐색 완료 목록으로 이동합니다.
+      </p>
+
+      <div class="complete-modal-actions">
+
+        <button class="complete-modal-cancel" id="complete-modal-cancel" type="button">
+          취소
+        </button>
+
+        <button class="complete-modal-confirm" id="complete-modal-confirm" type="button">
+          탐색 완료
+        </button>
+
+      </div>
+
+    </div>
+  </div>
 
   <script src="./js/common.js"></script>
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=d5iarqjubi"></script>
