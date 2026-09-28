@@ -16,12 +16,15 @@
 
 <body>
 
-  <!-- 공통 헤더 -->
   <header class="header">
     <div class="header-inner">
 
       <a class="header-logo" href="./index.html">
         <img src="./assets/images/golden-step-logo.png" alt="Golden Step">
+
+        <span class="header-tagline">
+          지금, 더 안전한 내일로
+        </span>
       </a>
 
       <button class="emergency-button" type="button" aria-label="112 긴급 신고"></button>
@@ -33,7 +36,6 @@
 
     <section class="board-container">
 
-      <!-- 탐색보드 제목 -->
       <div class="board-heading">
 
         <span class="board-label">
@@ -48,17 +50,14 @@
 
       </div>
 
-      <!-- 요약 카드 -->
       <section class="summary-grid" aria-label="탐색 요약 정보">
 
-        <!-- 경과 시간 -->
         <article class="summary-card">
 
           <div class="summary-icon summary-icon-time">
 
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="12" r="8"></circle>
-
               <path d="M12 7V12L15.5 14"></path>
             </svg>
 
@@ -76,20 +75,14 @@
 
           </div>
 
-          <span class="summary-arrow" aria-hidden="true">
-            ›
-          </span>
-
         </article>
 
-        <!-- 우선 확인 지역 -->
         <article class="summary-card">
 
           <div class="summary-icon summary-icon-location">
 
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 21S18.5 15 18.5 9.5A6.5 6.5 0 1 0 5.5 9.5C5.5 15 12 21 12 21Z"></path>
-
               <circle cx="12" cy="9.5" r="2.2"></circle>
             </svg>
 
@@ -102,33 +95,23 @@
             </span>
 
             <strong id="priority-location">
-              한강공원 산책로
+              분석 결과 대기
             </strong>
 
           </div>
 
-          <span class="summary-arrow" aria-hidden="true">
-            ›
-          </span>
-
         </article>
 
-        <!-- 예상 이동 반경 -->
         <article class="summary-card">
 
           <div class="summary-icon summary-icon-area">
 
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="12" r="7"></circle>
-
               <circle cx="12" cy="12" r="2"></circle>
-
               <path d="M12 5V3"></path>
-
               <path d="M12 21V19"></path>
-
               <path d="M5 12H3"></path>
-
               <path d="M21 12H19"></path>
             </svg>
 
@@ -150,15 +133,10 @@
 
           </div>
 
-          <span class="summary-arrow" aria-hidden="true">
-            ›
-          </span>
-
         </article>
 
       </section>
 
-      <!-- 지도 영역 -->
       <section class="board-map-section">
 
         <div class="map-heading">
@@ -196,87 +174,11 @@
 
         </div>
 
-        <!-- 탐색결과 화면과 동일한 지도 구조 -->
         <div class="map-placeholder">
 
-          <div class="mock-map-base">
-
-            <div class="map-district district-one"></div>
-            <div class="map-district district-two"></div>
-            <div class="map-district district-three"></div>
-            <div class="map-district district-four"></div>
-
-            <div class="map-park park-one"></div>
-            <div class="map-park park-two"></div>
-            <div class="map-park park-three"></div>
-
-            <div class="map-river"></div>
-
-            <span class="map-place-name place-school">
-              중앙초등학교
-            </span>
-
-            <span class="map-place-name place-park">
-              OO공원
-            </span>
-
-            <span class="map-place-name place-river">
-              한강공원
-            </span>
-
-            <span class="map-place-name place-district-one">
-              용산구
-            </span>
-
-            <span class="map-place-name place-district-two">
-              동작구
-            </span>
-
+          <div id="board-map" class="board-map" role="application" aria-label="탐색 우선 지역 지도">
           </div>
 
-          <!-- 낮은 우선도 -->
-          <div class="heatmap heatmap-low heatmap-one"></div>
-          <div class="heatmap heatmap-low heatmap-two"></div>
-          <div class="heatmap heatmap-low heatmap-three"></div>
-          <div class="heatmap heatmap-low heatmap-four"></div>
-          <div class="heatmap heatmap-low heatmap-five"></div>
-
-          <!-- 중간 우선도 -->
-          <div class="heatmap heatmap-medium"></div>
-
-          <!-- 높은 우선도 -->
-          <div class="heatmap heatmap-high"></div>
-
-          <!-- 탐색 방향 -->
-          <div class="search-radius radius-one"></div>
-          <div class="search-radius radius-two"></div>
-          <div class="search-radius radius-three"></div>
-
-          <!-- 마지막 확인 위치 -->
-          <div class="map-pin">
-
-            <svg viewBox="0 0 32 40" aria-hidden="true">
-              <path d="M16 1C8.3 1 2 7.3 2 15C2 25.5 16 39 16 39C16 39 30 25.5 30 15C30 7.3 23.7 1 16 1Z"></path>
-
-              <circle cx="16" cy="15" r="5"></circle>
-            </svg>
-
-          </div>
-
-          <!-- 마지막 확인 위치 정보 -->
-          <div class="location-card">
-
-            <strong>
-              마지막 확인 위치
-            </strong>
-
-            <span>
-              2026. 09. 26 14:32
-            </span>
-
-          </div>
-
-          <!-- 지도 내부 범례 -->
           <div class="map-legend">
 
             <span class="map-legend-title">
@@ -304,63 +206,52 @@
 
           </div>
 
-          <!-- 지도 API 안내 -->
-          <div class="map-api-message">
+        </div>
 
+      </section>
+
+      <section class="board-actions">
+
+        <button class="share-map-button" id="share-map-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <path d="M8.6 10.5L15.4 6.5"></path>
+            <path d="M8.6 13.5L15.4 17.5"></path>
+          </svg>
+
+          <span>현재 탐색 정보 공유하기</span>
+        </button>
+
+        <div class="board-sub-actions">
+
+          <button class="board-button result-button" id="result-button" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 21S19 14.5 19 8.5A7 7 0 1 0 5 8.5C5 14.5 12 21 12 21Z"></path>
-
-              <circle cx="12" cy="8.5" r="2.5"></circle>
+              <path d="M4 6L9 4L15 6L20 4V18L15 20L9 18L4 20V6Z"></path>
+              <path d="M9 4V18"></path>
+              <path d="M15 6V20"></path>
             </svg>
 
-            <span>
-              지도 API 연동 예정
-            </span>
+            <span>탐색결과 보기</span>
+          </button>
 
-          </div>
+          <button class="board-button new-search-button" id="new-search-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="5.5"></circle>
+              <path d="M15 15L20 20"></path>
+            </svg>
+
+            <span>새 탐색 시작</span>
+          </button>
 
         </div>
 
       </section>
 
-      <!-- 하단 버튼 -->
-      <section class="board-actions">
-
-        <button class="board-button result-button" id="result-button" type="button">
-
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 6L9 4L15 6L20 4V18L15 20L9 18L4 20V6Z"></path>
-
-            <path d="M9 4V18"></path>
-            <path d="M15 6V20"></path>
-          </svg>
-
-          <span>
-            탐색결과 보기
-          </span>
-
-        </button>
-
-        <button class="board-button new-search-button" id="new-search-button" type="button">
-
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="10.5" cy="10.5" r="5.5"></circle>
-
-            <path d="M15 15L20 20"></path>
-          </svg>
-
-          <span>
-            새 탐색 시작
-          </span>
-
-        </button>
-
-      </section>
-
-    </section>
-
   </main>
-
+  <script src="./js/common.js"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=d5iarqjubi&submodules=geocoder"></script>
   <script src="./js/search-board.js"></script>
 
 </body>

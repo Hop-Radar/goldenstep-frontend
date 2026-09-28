@@ -19,6 +19,9 @@
     <div class="header-inner">
       <a class="header-logo" href="./index.html">
         <img src="./assets/images/golden-step-logo.png" alt="Golden Step">
+        <span class="header-tagline">
+          지금, 더 안전한 내일로
+        </span>
       </a>
 
       <button class="emergency-button" type="button" aria-label="112 긴급 신고"></button>
@@ -61,81 +64,12 @@
           </div>
 
           <div class="map-placeholder">
-
-            <div class="mock-map-base">
-
-              <div class="map-district district-one"></div>
-              <div class="map-district district-two"></div>
-              <div class="map-district district-three"></div>
-              <div class="map-district district-four"></div>
-
-              <div class="map-park park-one"></div>
-              <div class="map-park park-two"></div>
-              <div class="map-park park-three"></div>
-
-              <div class="map-river"></div>
-
-              <span class="map-place-name place-school">
-                중앙초등학교
-              </span>
-
-              <span class="map-place-name place-park">
-                OO공원
-              </span>
-
-              <span class="map-place-name place-river">
-                한강공원
-              </span>
-
-              <span class="map-place-name place-district-one">
-                용산구
-              </span>
-
-              <span class="map-place-name place-district-two">
-                동작구
-              </span>
-
-            </div>
-
-            <div class="heatmap heatmap-low heatmap-one"></div>
-            <div class="heatmap heatmap-low heatmap-two"></div>
-            <div class="heatmap heatmap-low heatmap-three"></div>
-            <div class="heatmap heatmap-low heatmap-four"></div>
-            <div class="heatmap heatmap-low heatmap-five"></div>
-
-            <div class="heatmap heatmap-medium"></div>
-            <div class="heatmap heatmap-high"></div>
-
-            <div class="search-radius radius-one"></div>
-            <div class="search-radius radius-two"></div>
-            <div class="search-radius radius-three"></div>
-
-            <div class="map-pin">
-              <svg viewBox="0 0 32 40" aria-hidden="true">
-                <path d="M16 1C8.3 1 2 7.3 2 15C2 25.5 16 39 16 39C16 39 30 25.5 30 15C30 7.3 23.7 1 16 1Z"></path>
-
-                <circle cx="16" cy="15" r="5"></circle>
-              </svg>
-            </div>
-
-            <div class="location-card">
-              <strong>
-                마지막 확인 위치
-              </strong>
-
-              <span>
-                2026. 09. 26 14:32
-              </span>
-            </div>
+            <div id="result-map" class="result-map"></div>
 
             <div class="priority-legend">
-
-              <span class="legend-title">
-                탐색 우선도
-              </span>
+              <span class="legend-title">탐색 우선도</span>
 
               <div class="legend-items">
-
                 <span>
                   <i class="legend-color legend-high"></i>
                   높음
@@ -150,24 +84,8 @@
                   <i class="legend-color legend-low"></i>
                   낮음
                 </span>
-
               </div>
             </div>
-
-            <div class="map-api-message">
-
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 21S19 14.5 19 8.5A7 7 0 1 0 5 8.5C5 14.5 12 21 12 21Z"></path>
-
-                <circle cx="12" cy="8.5" r="2.5"></circle>
-              </svg>
-
-              <span>
-                지도 API 연동 예정
-              </span>
-
-            </div>
-
           </div>
         </section>
 
@@ -199,7 +117,7 @@
 
             <div class="slider-control">
 
-              <input id="time-range" type="range" min="0" max="500" value="0" step="1" aria-label="경과 시간 선택">
+              <input id="time-range" type="range" min="0" max="5" value="0" step="1" aria-label="경과시간 선택">
 
               <div class="slider-points" aria-hidden="true">
                 <i class="slider-point point-0"></i>
@@ -213,29 +131,12 @@
             </div>
 
             <div class="time-labels" aria-hidden="true">
-              <span class="time-label label-0">
-                현재
-              </span>
-
-              <span class="time-label label-20">
-                30분
-              </span>
-
-              <span class="time-label label-40">
-                1시간
-              </span>
-
-              <span class="time-label label-60">
-                2시간
-              </span>
-
-              <span class="time-label label-80">
-                3시간
-              </span>
-
-              <span class="time-label label-100">
-                6시간
-              </span>
+              <span class="time-label label-0">현재</span>
+              <span class="time-label label-20">30분</span>
+              <span class="time-label label-40">1시간</span>
+              <span class="time-label label-60">2시간</span>
+              <span class="time-label label-80">3시간</span>
+              <span class="time-label label-100">6시간</span>
             </div>
 
           </div>
@@ -261,9 +162,9 @@
 
           </div>
 
-          <div class="priority-list">
+          <div class="priority-list" id="priority-list">
 
-            <article class="priority-item">
+            <article class="priority-item" data-priority-id="priority-1">
 
               <div class="priority-rank">
                 1
@@ -291,17 +192,21 @@
 
               </div>
 
-              <button class="detail-button" type="button" data-location="한강공원 산책로">
-                상세보기
+              <div class="priority-actions">
 
-                <span aria-hidden="true">
-                  ›
-                </span>
-              </button>
+                <button class="detail-button" type="button" data-location-id="location-1">
+                  상세보기
+
+                  <span aria-hidden="true">
+                    ›
+                  </span>
+                </button>
+
+              </div>
 
             </article>
 
-            <article class="priority-item">
+            <article class="priority-item" data-priority-id="priority-2">
 
               <div class="priority-rank">
                 2
@@ -329,17 +234,21 @@
 
               </div>
 
-              <button class="detail-button" type="button" data-location="중앙초등학교 주변">
-                상세보기
+              <div class="priority-actions">
 
-                <span aria-hidden="true">
-                  ›
-                </span>
-              </button>
+                <button class="detail-button" type="button" data-location-id="location-2">
+                  상세보기
+
+                  <span aria-hidden="true">
+                    ›
+                  </span>
+                </button>
+
+              </div>
 
             </article>
 
-            <article class="priority-item">
+            <article class="priority-item" data-priority-id="priority-3">
 
               <div class="priority-rank">
                 3
@@ -367,31 +276,181 @@
 
               </div>
 
-              <button class="detail-button" type="button" data-location="OO공원">
-                상세보기
+              <div class="priority-actions">
 
-                <span aria-hidden="true">
-                  ›
-                </span>
-              </button>
+                <button class="detail-button" type="button" data-location-id="location-3">
+                  상세보기
+
+                  <span aria-hidden="true">
+                    ›
+                  </span>
+                </button>
+
+              </div>
 
             </article>
 
           </div>
-        </section>
 
-      </div>
-    </section>
+          <div class="completed-priority-section" id="completed-priority-section" hidden>
+            <div class="completed-priority-heading">
+              <span>탐색 완료</span>
+            </div>
 
-    <section class="result-actions">
-      <button class="search-board-button" id="search-board-button" type="button">
-        <span>탐색보드 보기</span>
-        <span aria-hidden="true">→</span>
-      </button>
-    </section>
+            <div class="completed-priority-list" id="completed-priority-list"></div>
+          </div>
+
+          <section class="result-actions">
+            <button class="search-board-button" id="search-board-button" type="button">
+              <span>탐색보드 보기</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </section>
+          <div class="complete-modal" id="complete-modal" hidden>
+            <div class="complete-modal-backdrop" data-close-complete-modal></div>
+
+            <div class="complete-modal-content" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+
+              <div class="complete-modal-icon">
+                ✓
+              </div>
+
+              <h2 id="complete-modal-title">
+                이 지역의 탐색을 완료하셨나요?
+              </h2>
+
+              <strong class="complete-modal-location" id="complete-modal-location"></strong>
+
+              <p>
+                완료한 지역은 탐색 완료 목록으로 이동합니다.
+              </p>
+
+              <div class="complete-modal-actions">
+
+                <button class="complete-modal-cancel" id="complete-modal-cancel" type="button">
+                  취소
+                </button>
+
+                <button class="complete-modal-confirm" id="complete-modal-confirm" type="button">
+                  탐색 완료
+                </button>
+
+              </div>
+
+            </div>
+          </div>
   </main>
 
+  <div class="detail-drawer-overlay" id="detail-drawer-overlay"></div>
+
+  <aside class="detail-drawer" id="detail-drawer" aria-hidden="true">
+
+    <div class="detail-drawer-header">
+      <h2>지점 상세</h2>
+
+      <button class="detail-close-button" id="detail-close-button" type="button" aria-label="지점 상세 닫기">
+        ×
+      </button>
+    </div>
+
+    <div class="detail-drawer-content">
+
+      <section class="detail-place-card">
+
+        <div class="detail-place-heading">
+          <div>
+            <span class="detail-priority-badge" id="detail-priority-badge">
+              높은 우선도
+            </span>
+
+            <h3 id="detail-place-name">
+              우선 확인 지역
+            </h3>
+          </div>
+        </div>
+
+        <p class="detail-address" id="detail-address">
+          주소 정보
+        </p>
+
+        <div class="detail-stats">
+
+          <div class="detail-stat">
+            <span class="detail-stat-icon" aria-hidden="true">
+              ↔
+            </span>
+
+            <div>
+              <span>기준 위치에서 거리</span>
+              <strong id="detail-distance">약 0m</strong>
+            </div>
+          </div>
+
+          <div class="detail-stat">
+            <span class="detail-stat-icon" aria-hidden="true">
+              ◷
+            </span>
+
+            <div>
+              <span>예상 도보시간</span>
+              <strong id="detail-walking-time">약 0분</strong>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section class="detail-route-section">
+
+        <div class="detail-route-heading">
+          <div>
+            <span>ROUTE</span>
+            <h3>예상 이동 경로</h3>
+          </div>
+        </div>
+
+        <div class="detail-map-wrapper">
+          <div id="detail-map" class="detail-map"></div>
+        </div>
+
+        <div class="detail-route-guide">
+          <span class="route-guide-icon" aria-hidden="true">
+            ↗
+          </span>
+
+          <div>
+            <strong>예상 경로</strong>
+            <p>
+              마지막 확인 위치와 우선 확인 지점을 연결해 표시합니다.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+    <div class="detail-drawer-footer">
+      <button class="route-check-button" id="route-check-button" type="button">
+        <span aria-hidden="true">➤</span>
+        <span>경로 확인</span>
+      </button>
+
+      <div class="drawer-complete-area">
+        <button class="drawer-complete-button" id="drawer-complete-button" type="button">
+          <span aria-hidden="true">✓</span>
+          <span>탐색 완료</span>
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <script src="./js/common.js"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=d5iarqjubi"></script>
   <script src="./js/search-result.js"></script>
+
 </body>
 
 </html>
