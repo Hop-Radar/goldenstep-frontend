@@ -395,3 +395,140 @@ body.emergency-modal-open {
     height: 54px;
   }
 }
+
+.emergency-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.emergency-divider::before,
+.emergency-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: #e2e8f0;
+}
+
+.emergency-divider span {
+  flex-shrink: 0;
+}
+
+.emergency-web-guide {
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.emergency-web-guide strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.emergency-web-guide p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.emergency-safedream-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.emergency-safedream-button:hover {
+  border-color: #93c5fd;
+  background-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.emergency-external-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.emergency-service-notice {
+  margin: 18px 0 4px;
+  padding: 14px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background-color: #f8fbff;
+  text-align: left;
+}
+
+.emergency-service-notice strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.emergency-service-notice p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .emergency-divider {
+    margin: 18px 0;
+  }
+
+  .emergency-safedream-button {
+    min-height: 52px;
+  }
+
+  .emergency-service-notice {
+    font-size: 11px;
+  }
+}
+
+.emergency-report-number {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 12px !important;
+  padding: 11px 13px;
+  border-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.emergency-report-number strong {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.emergency-report-number span {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+}

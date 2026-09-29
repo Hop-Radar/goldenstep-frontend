@@ -51,6 +51,7 @@ let pendingLatitude = null;
 let pendingLongitude = null;
 let pendingRoadAddress = "";
 let pendingJibunAddress = "";
+let isPersonInformationCompleted = false;
 
 const MOCK_PLACES = [
   {
@@ -1313,8 +1314,7 @@ const openPersonDetails = () => {
     return;
   }
 
-  personDetails.hidden =
-    false;
+  personDetails.hidden = false;
 
   personCard.classList.add(
     "is-open"
@@ -1335,8 +1335,7 @@ const closePersonDetails = () => {
     return;
   }
 
-  personDetails.hidden =
-    true;
+  personDetails.hidden = true;
 
   personCard.classList.remove(
     "is-open"
@@ -1367,51 +1366,307 @@ const handlePersonToggle = () => {
   openPersonDetails();
 };
 
-const validatePersonInformation = () => {
-  const personType =
-    getCheckedValue(
-      "personType"
-    );
-
-  const disabilityStatus =
-    getCheckedValue(
-      "disabilityStatus"
-    );
-
-  const diseaseStatus =
-    getCheckedValue(
-      "diseaseStatus"
-    );
-
-  return Boolean(
-    personType &&
-    disabilityStatus &&
-    diseaseStatus
+const getPersonInput = (
+  name
+) => {
+  return document.querySelector(
+    `input[name="${name}"]`
   );
 };
 
-const handlePersonComplete = () => {
-  if (
-    !validatePersonInformation()
-  ) {
-    openPersonDetails();
+const clearPersonValidity = (
+  name
+) => {
+  const input =
+    getPersonInput(name);
 
-    if (personDetails) {
-      const invalidInput =
-        personDetails.querySelector(
-          "input:invalid"
-        );
-
-      if (invalidInput) {
-        invalidInput.reportValidity();
-      }
-    }
-
+  if (!input) {
     return;
+  }
+
+  input.setCustomValidity("");
+};
+
+const showRequiredPersonMessage = (
+  name
+) => {
+  const input =
+    getPersonInput(name);
+
+  if (!input) {
+    return;
+  }
+
+  openPersonDetails();
+
+  input.setCustomValidity(
+    "필수 선택 항목입니다."
+  );
+
+  window.setTimeout(() => {
+    input.reportValidity();
+  }, 100);
+};
+
+const validatePersonType = () => {
+  if (
+    getCheckedValue(
+      "personType"
+    )
+  ) {
+    clearPersonValidity(
+      "personType"
+    );
+
+    return true;
+  }
+
+  showRequiredPersonMessage(
+    "personType"
+  );
+
+  return false;
+};
+
+const validateDisabilityStatus = () => {
+  if (
+    getCheckedValue(
+      "disabilityStatus"
+    )
+  ) {
+    clearPersonValidity(
+      "disabilityStatus"
+    );
+
+    return true;
+  }
+
+  showRequiredPersonMessage(
+    "disabilityStatus"
+  );
+
+  return false;
+};
+
+const validateDiseaseStatus = () => {
+  if (
+    getCheckedValue(
+      "diseaseStatus"
+    )
+  ) {
+    clearPersonValidity(
+      "diseaseStatus"
+    );
+
+    return true;
+  }
+
+  showRequiredPersonMessage(
+    "diseaseStatus"
+  );
+
+  return false;
+};
+
+const validatePersonInformation = () => {
+  if (!validatePersonType()) {
+    return false;
+  }
+
+  if (!validateDisabilityStatus()) {
+    return false;
+  }
+
+  if (!validateDiseaseStatus()) {
+    return false;
+  }
+
+  return true;
+};
+
+const showPersonCompleteMessage = () => {
+  openPersonDetails();
+
+  if (!personCompleteButton) {
+    return;
+  }
+
+  const originalText =
+    personCompleteButton.textContent;
+
+  personCompleteButton.textContent =
+    "입력 완료 버튼을 눌러주세요.";
+
+  personCompleteButton.focus();
+
+  personCompleteButton.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  window.setTimeout(() => {
+    if (
+      !isPersonInformationCompleted
+    ) {
+      personCompleteButton.textContent =
+        originalText;
+    }
+  }, 2500);
+};
+
+const handlePersonComplete = () => {
+  if (!validatePersonType()) {
+    return;
+  }
+
+  if (
+    !validateDisabilityStatus()
+  ) {
+    return;
+  }
+
+  if (!validateDiseaseStatus()) {
+    return;
+  }
+
+  isPersonInformationCompleted =
+    true;
+
+  if (personCompleteButton) {
+    personCompleteButton.textContent =
+      "입력 완료";
   }
 
   updatePersonSummary();
   closePersonDetails();
+};
+
+const handlePersonInformationChange = (
+  event
+) => {
+  const target = event.target;
+
+  if (!target) {
+    return;
+  }
+
+  if (
+    target.name ===
+    "personType"
+  ) {
+    clearPersonValidity(
+      "personType"
+    );
+  }
+
+  if (
+    target.name ===
+    "disabilityStatus"
+  ) {
+    clearPersonValidity(
+      "disabilityStatus"
+    );
+  }
+
+  if (
+    target.name ===
+    "diseaseStatus"
+  ) {
+    clearPersonValidity(
+      "diseaseStatus"
+    );
+  }
+
+  isPersonInformationCompleted =
+    false;
+
+  if (personCompleteButton) {
+    personCompleteButton.textContent =
+      "입력 완료";
+  }
+
+  updatePersonSummary();
+};
+
+const validateLastLocation = () => {
+  if (
+    lastLocation &&
+    lastLocation.value.trim() &&
+    lastLocationLat.value &&
+    lastLocationLng.value
+  ) {
+    lastLocation.setCustomValidity(
+      ""
+    );
+
+    return true;
+  }
+
+  if (!lastLocation) {
+    return false;
+  }
+
+  lastLocation.setCustomValidity(
+    "마지막 확인 위치를 선택해주세요."
+  );
+
+  lastLocation.reportValidity();
+
+  return false;
+};
+
+const validateLastSeenDate = () => {
+  if (lastSeenDate.value) {
+    lastSeenDate.setCustomValidity(
+      ""
+    );
+
+    return true;
+  }
+
+  lastSeenDate.setCustomValidity(
+    "마지막 확인 날짜를 선택해주세요."
+  );
+
+  lastSeenDate.reportValidity();
+
+  return false;
+};
+
+const validateLastSeenHour = () => {
+  if (lastSeenHour.value) {
+    lastSeenHour.setCustomValidity(
+      ""
+    );
+
+    return true;
+  }
+
+  lastSeenHour.setCustomValidity(
+    "마지막 확인 시간을 선택해주세요."
+  );
+
+  lastSeenHour.reportValidity();
+
+  return false;
+};
+
+const validateLastSeenMinute = () => {
+  if (lastSeenMinute.value) {
+    lastSeenMinute.setCustomValidity(
+      ""
+    );
+
+    return true;
+  }
+
+  lastSeenMinute.setCustomValidity(
+    "마지막 확인 분을 선택해주세요."
+  );
+
+  lastSeenMinute.reportValidity();
+
+  return false;
 };
 
 const handleSearchFormSubmit = (
@@ -1420,55 +1675,54 @@ const handleSearchFormSubmit = (
   event.preventDefault();
 
   updateLastSeenTime();
-  updatePersonSummary();
 
-  if (
-    !validatePersonInformation()
-  ) {
-    openPersonDetails();
-
-    if (personDetails) {
-      const invalidPersonInput =
-        personDetails.querySelector(
-          "input:invalid"
-        );
-
-      if (invalidPersonInput) {
-        invalidPersonInput.reportValidity();
-      }
-    }
-
+  if (!validateLastLocation()) {
     return;
   }
 
-  if (
-    !searchForm.checkValidity()
-  ) {
-    searchForm.reportValidity();
+  if (!validateLastSeenDate()) {
     return;
   }
+
+  if (!validateLastSeenHour()) {
+    return;
+  }
+
+  if (!validateLastSeenMinute()) {
+    return;
+  }
+
+  updateLastSeenTime();
 
   if (
     !lastSeenTime ||
     !lastSeenTime.value
   ) {
-    alert(
-      "마지막 확인 시각을 확인해주세요."
-    );
+    return;
+  }
 
+  if (!validatePersonType()) {
     return;
   }
 
   if (
-    !lastLocationLat.value ||
-    !lastLocationLng.value
+    !validateDisabilityStatus()
   ) {
-    alert(
-      "지도에서 위치를 지정한 후 '이 위치로 선택' 버튼을 눌러주세요."
-    );
-
     return;
   }
+
+  if (!validateDiseaseStatus()) {
+    return;
+  }
+
+  if (
+    !isPersonInformationCompleted
+  ) {
+    showPersonCompleteMessage();
+    return;
+  }
+
+  updatePersonSummary();
 
   const searchData = {
     address:
@@ -1572,6 +1826,10 @@ if (lastLocation) {
     () => {
       clearConfirmedLocation();
       hideLocationSearchResults();
+
+      lastLocation.setCustomValidity(
+        ""
+      );
     }
   );
 }
@@ -1586,21 +1844,39 @@ if (confirmLocationButton) {
 if (lastSeenDate) {
   lastSeenDate.addEventListener(
     "change",
-    handleLastSeenDateChange
+    () => {
+      lastSeenDate.setCustomValidity(
+        ""
+      );
+
+      handleLastSeenDateChange();
+    }
   );
 }
 
 if (lastSeenHour) {
   lastSeenHour.addEventListener(
     "change",
-    handleLastSeenHourChange
+    () => {
+      lastSeenHour.setCustomValidity(
+        ""
+      );
+
+      handleLastSeenHourChange();
+    }
   );
 }
 
 if (lastSeenMinute) {
   lastSeenMinute.addEventListener(
     "change",
-    handleLastSeenMinuteChange
+    () => {
+      lastSeenMinute.setCustomValidity(
+        ""
+      );
+
+      handleLastSeenMinuteChange();
+    }
   );
 }
 
@@ -1621,7 +1897,7 @@ if (personCompleteButton) {
 if (personDetails) {
   personDetails.addEventListener(
     "change",
-    updatePersonSummary
+    handlePersonInformationChange
   );
 }
 
