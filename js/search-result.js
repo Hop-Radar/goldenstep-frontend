@@ -2,47 +2,23 @@
   const timeRange = document.querySelector("#time-range");
   const selectedTime = document.querySelector("#selected-time");
   const searchBoardButton = document.querySelector("#search-board-button");
-
   const priorityList = document.querySelector("#priority-list");
-  const completedPrioritySection = document.querySelector(
-    "#completed-priority-section"
-  );
-  const completedPriorityList = document.querySelector(
-    "#completed-priority-list"
-  );
-
+  const completedPrioritySection = document.querySelector("#completed-priority-section");
+  const completedPriorityList = document.querySelector("#completed-priority-list");
   const detailButtons = document.querySelectorAll(".detail-button");
   const detailDrawer = document.querySelector("#detail-drawer");
-  const detailDrawerOverlay = document.querySelector(
-    "#detail-drawer-overlay"
-  );
+  const detailDrawerOverlay = document.querySelector("#detail-drawer-overlay");
   const detailCloseButton = document.querySelector("#detail-close-button");
-
-  const detailPriorityBadge = document.querySelector(
-    "#detail-priority-badge"
-  );
+  const detailPriorityBadge = document.querySelector("#detail-priority-badge");
   const detailPlaceName = document.querySelector("#detail-place-name");
-  const detailAddress = document.querySelector("#detail-address");
   const detailDistance = document.querySelector("#detail-distance");
-  const detailWalkingTime = document.querySelector(
-    "#detail-walking-time"
-  );
-
+  const detailWalkingTime = document.querySelector("#detail-walking-time");
   const routeCheckButton = document.querySelector("#route-check-button");
-  const drawerCompleteButton = document.querySelector(
-    "#drawer-complete-button"
-  );
-
+  const drawerCompleteButton = document.querySelector("#drawer-complete-button");
   const completeModal = document.querySelector("#complete-modal");
-  const completeModalLocation = document.querySelector(
-    "#complete-modal-location"
-  );
-  const completeModalCancel = document.querySelector(
-    "#complete-modal-cancel"
-  );
-  const completeModalConfirm = document.querySelector(
-    "#complete-modal-confirm"
-  );
+  const completeModalLocation = document.querySelector("#complete-modal-location");
+  const completeModalCancel = document.querySelector("#complete-modal-cancel");
+  const completeModalConfirm = document.querySelector("#complete-modal-confirm");
 
   const TIME_POINTS = [
     {
@@ -83,19 +59,24 @@
   let pendingCompleteItem = null;
 
   const getSearchLocation = () => {
-    const storedLocation = sessionStorage.getItem(
-      "goldenStepSearchLocation"
-    );
+    const storedSearchData =
+      sessionStorage.getItem(
+        "goldenStepSearchData"
+      );
 
-    if (!storedLocation) {
+    if (!storedSearchData) {
       return DEFAULT_CENTER;
     }
 
     try {
-      const parsedLocation = JSON.parse(storedLocation);
+      const searchData =
+        JSON.parse(storedSearchData);
 
-      const lat = Number(parsedLocation.lat);
-      const lng = Number(parsedLocation.lng);
+      const lat =
+        Number(searchData.latitude);
+
+      const lng =
+        Number(searchData.longitude);
 
       if (
         Number.isFinite(lat) &&
@@ -123,7 +104,6 @@
           id: "location-1",
           priorityId: "priority-1",
           name: "한강공원 산책로",
-          address: "서울시 OO구 OO동",
           priority: "high",
           priorityLabel: "높은 우선도",
           distance: "약 450m",
@@ -136,7 +116,6 @@
           id: "location-2",
           priorityId: "priority-2",
           name: "중앙초등학교 주변",
-          address: "서울시 OO구 OO동",
           priority: "medium",
           priorityLabel: "중간 우선도",
           distance: "약 720m",
@@ -148,8 +127,7 @@
         {
           id: "location-3",
           priorityId: "priority-3",
-          name: "OO공원",
-          address: "서울시 OO구 OO동",
+          name: "하늘공원",
           priority: "low",
           priorityLabel: "낮은 우선도",
           distance: "약 980m",
@@ -344,7 +322,6 @@
       priority: "high",
       priorityLabel: "높은 우선도",
       name: "한강공원 산책로",
-      address: "서울시 OO구 OO동",
       distance: "약 450m",
       walkingTime: "약 6분",
       latOffset: 0.0022,
@@ -355,7 +332,6 @@
       priority: "medium",
       priorityLabel: "중간 우선도",
       name: "중앙초등학교 주변",
-      address: "서울시 OO구 OO동",
       distance: "약 720m",
       walkingTime: "약 10분",
       latOffset: -0.0024,
@@ -365,8 +341,7 @@
       priorityId: "priority-3",
       priority: "low",
       priorityLabel: "낮은 우선도",
-      name: "OO공원",
-      address: "서울시 OO구 OO동",
+      name: "하늘공원",
       distance: "약 980m",
       walkingTime: "약 14분",
       latOffset: 0.0006,
@@ -929,9 +904,14 @@
         map: detailMap,
         path: routePath,
         strokeColor: "#2563EB",
-        strokeWeight: 5,
-        strokeOpacity: 0.85,
-        strokeStyle: "solid"
+        strokeWeight: 6,
+        strokeOpacity: 1,
+        strokeStyle: "solid",
+        strokeLineCap: "round",
+        strokeLineJoin: "round",
+        outlineColor: "#FFFFFF",
+        outlineWeight: 3,
+        outlineOpacity: 0.95
       });
 
     detailMarkers.push(
@@ -1189,11 +1169,6 @@
     if (detailPlaceName) {
       detailPlaceName.textContent =
         location.name;
-    }
-
-    if (detailAddress) {
-      detailAddress.textContent =
-        location.address;
     }
 
     if (detailDistance) {

@@ -530,3 +530,31 @@ body.safety-modal-open {
     margin-top: 10px;
   }
 }
+
+.safety-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: #64748b;
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.safety-modal-close:hover {
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
