@@ -19,36 +19,141 @@
     longitude: 126.9780
   };
 
-  const getStoredSearchData = () => {
-    try {
-      const storedData =
-        sessionStorage.getItem(
-          "goldenStepSearchData"
-        );
+  const decodeShareData = (encodedData) => {
+    if (!encodedData) {
+      return null;
+    }
 
-      if (!storedData) {
-        return {};
+    try {
+      let base64 = encodedData
+        .replaceAll("-", "+")
+        .replaceAll("_", "/");
+
+      while (base64.length % 4 !== 0) {
+        base64 += "=";
       }
 
-      return JSON.parse(storedData);
-    } catch {
-      return {};
+      const binary =
+        atob(base64);
+
+      const bytes =
+        Uint8Array.from(
+          binary,
+          (character) =>
+            character.charCodeAt(0)
+        );
+
+      const json =
+        new TextDecoder().decode(
+          bytes
+        );
+
+      const parsedData =
+        JSON.parse(json);
+
+      if (
+        !parsedData ||
+        typeof parsedData !== "object" ||
+        Array.isArray(parsedData)
+      ) {
+        return null;
+      }
+
+      return parsedData;
+    } catch (error) {
+      console.error(
+        "Share data decode error:",
+        error
+      );
+
+      return null;
     }
+  };
+
+  const getUrlShareData = () => {
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const encodedData =
+      params.get("data");
+
+    return decodeShareData(
+      encodedData
+    );
+  };
+
+  const getSessionSearchData = () => {
+    const storageKeys = [
+      "goldenStepSearchData",
+      "searchData",
+      "searchFormData"
+    ];
+
+    for (const key of storageKeys) {
+      const storedValue =
+        sessionStorage.getItem(key);
+
+      if (!storedValue) {
+        continue;
+      }
+
+      try {
+        const parsedValue =
+          JSON.parse(storedValue);
+
+        if (
+          parsedValue &&
+          typeof parsedValue ===
+          "object"
+        ) {
+          return parsedValue;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return {};
+  };
+
+  const getSearchData = () => {
+    const urlData =
+      getUrlShareData();
+
+    if (urlData) {
+      return urlData;
+    }
+
+    return getSessionSearchData();
   };
 
   const getLocation = () => {
     const searchData =
-      getStoredSearchData();
+      getSearchData();
 
     const latitude =
-      Number(searchData.latitude);
+      Number(
+        searchData.latitude ??
+        searchData.lat ??
+        searchData.lastLocationLat
+      );
 
     const longitude =
-      Number(searchData.longitude);
+      Number(
+        searchData.longitude ??
+        searchData.lng ??
+        searchData.lastLocationLng
+      );
 
     if (
       Number.isFinite(latitude) &&
-      Number.isFinite(longitude)
+      Number.isFinite(longitude) &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180
     ) {
       return {
         latitude,
@@ -59,26 +164,128 @@
     return DEFAULT_LOCATION;
   };
 
+  const getLocationText = (
+    searchData
+  ) => {
+    return (
+      searchData.address ??
+      searchData.location ??
+      searchData.locationName ??
+      searchData.lastLocationAddress ??
+      "위치 정보가 없습니다."
+    );
+  };
+
+  const formatLastSeenTime = (
+    value
+  ) => {
+    if (!value) {
+      return null;
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return String(value);
+    }
+
+    const year =
+      date.getFullYear();
+
+    const month =
+      String(
+        date.getMonth() + 1
+      ).padStart(2, "0");
+
+    const day =
+      String(
+        date.getDate()
+      ).padStart(2, "0");
+
+    const hours =
+      String(
+        date.getHours()
+      ).padStart(2, "0");
+
+    const minutes =
+      String(
+        date.getMinutes()
+      ).padStart(2, "0");
+
+    return `${year}.${month}.${day} ${hours}:${minutes}`;
+  };
+
   const renderSearchInfo = () => {
     const searchData =
-      getStoredSearchData();
+      getSearchData();
 
     if (locationElement) {
       locationElement.textContent =
-        searchData.address ||
-        searchData.location ||
-        "위치 정보가 없습니다.";
+        getLocationText(
+          searchData
+        );
     }
 
     if (lastSeenTimeElement) {
       const lastSeenTime =
-        searchData.lastSeenTime;
+        searchData.lastSeenTime ??
+        searchData.missingTime ??
+        searchData.time;
+
+      const formattedTime =
+        formatLastSeenTime(
+          lastSeenTime
+        );
 
       lastSeenTimeElement.textContent =
-        lastSeenTime
-          ? `마지막 확인 시각 ${lastSeenTime}`
+        formattedTime
+          ? `마지막 확인 시각 ${formattedTime}`
           : "마지막 확인 시각 정보가 없습니다.";
     }
+  };
+
+  const createMarkerIcon = () => {
+    return {
+      content: `
+        <div
+          style="
+            position: relative;
+            box-sizing: border-box;
+            width: 22px;
+            height: 22px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            background: #2563eb;
+            box-shadow:
+              0 2px 7px rgb(15 23 42 / 28%),
+              0 0 0 1px rgb(37 99 235 / 12%);
+          "
+        >
+          <span
+            style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: #ffffff;
+              transform: translate(-50%, -50%);
+            "
+          ></span>
+        </div>
+      `,
+      anchor:
+        new naver.maps.Point(
+          11,
+          11
+        )
+    };
   };
 
   const initializeMap = () => {
@@ -122,8 +329,49 @@
     new naver.maps.Marker({
       position: center,
       map,
-      title: "마지막 확인 위치"
+      icon:
+        createMarkerIcon(),
+      title:
+        "마지막 확인 위치"
     });
+
+    window.setTimeout(() => {
+      naver.maps.Event.trigger(
+        map,
+        "resize"
+      );
+
+      map.setCenter(center);
+    }, 100);
+  };
+
+  const getPriorityData = () => {
+    const searchData =
+      getSearchData();
+
+    const candidates = [
+      searchData.priorityLocations,
+      searchData.priorityAreas,
+      searchData.priorities,
+      searchData.analysisResults
+    ];
+
+    for (
+      let index = 0;
+      index < candidates.length;
+      index += 1
+    ) {
+      if (
+        Array.isArray(
+          candidates[index]
+        ) &&
+        candidates[index].length > 0
+      ) {
+        return candidates[index];
+      }
+    }
+
+    return [];
   };
 
   const renderPriorityLocations = () => {
@@ -131,18 +379,264 @@
       return;
     }
 
-    priorityList.innerHTML = `
-      <div class="share-empty-state">
-        우선 확인 지역 분석 결과가 아직 없습니다.
-      </div>
-    `;
+    const priorities =
+      getPriorityData();
+
+    if (
+      priorities.length === 0
+    ) {
+      priorityList.innerHTML = `
+        <div class="share-empty-state">
+          우선 확인 지역 분석 결과가 아직 없습니다.
+        </div>
+      `;
+
+      return;
+    }
+
+    priorityList.innerHTML = "";
+
+    priorities.forEach(
+      (priority, index) => {
+        const item =
+          document.createElement(
+            "div"
+          );
+
+        item.className =
+          "share-priority-item";
+
+        const rank =
+          document.createElement(
+            "span"
+          );
+
+        rank.className =
+          "share-priority-rank";
+
+        rank.textContent =
+          String(index + 1);
+
+        const content =
+          document.createElement(
+            "div"
+          );
+
+        content.className =
+          "share-priority-content";
+
+        const name =
+          document.createElement(
+            "strong"
+          );
+
+        name.textContent =
+          priority.name ??
+          priority.locationName ??
+          priority.placeName ??
+          `우선 확인 지역 ${index + 1}`;
+
+        content.appendChild(name);
+
+        const address =
+          priority.address ??
+          priority.location ??
+          "";
+
+        if (address) {
+          const addressElement =
+            document.createElement(
+              "span"
+            );
+
+          addressElement.textContent =
+            address;
+
+          content.appendChild(
+            addressElement
+          );
+        }
+
+        item.appendChild(rank);
+        item.appendChild(content);
+
+        priorityList.appendChild(
+          item
+        );
+      }
+    );
+  };
+
+  const copyText = async (
+    text
+  ) => {
+    if (
+      navigator.clipboard &&
+      window.isSecureContext
+    ) {
+      await navigator.clipboard.writeText(
+        text
+      );
+
+      return;
+    }
+
+    const textArea =
+      document.createElement(
+        "textarea"
+      );
+
+    textArea.value = text;
+
+    textArea.setAttribute(
+      "readonly",
+      ""
+    );
+
+    textArea.style.position =
+      "fixed";
+
+    textArea.style.left =
+      "-9999px";
+
+    textArea.style.opacity =
+      "0";
+
+    document.body.appendChild(
+      textArea
+    );
+
+    textArea.select();
+
+    const copied =
+      document.execCommand(
+        "copy"
+      );
+
+    textArea.remove();
+
+    if (!copied) {
+      throw new Error(
+        "Clipboard copy failed"
+      );
+    }
+  };
+
+  const showShareToast = (
+    message
+  ) => {
+    const previousToast =
+      document.querySelector(
+        ".share-page-toast"
+      );
+
+    if (previousToast) {
+      previousToast.remove();
+    }
+
+    const toast =
+      document.createElement(
+        "div"
+      );
+
+    toast.className =
+      "share-page-toast";
+
+    toast.setAttribute(
+      "role",
+      "status"
+    );
+
+    toast.setAttribute(
+      "aria-live",
+      "polite"
+    );
+
+    const icon =
+      document.createElement(
+        "span"
+      );
+
+    icon.textContent = "✓";
+
+    const text =
+      document.createElement(
+        "span"
+      );
+
+    text.textContent =
+      message;
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+
+    Object.assign(
+      toast.style,
+      {
+        position: "fixed",
+        left: "50%",
+        bottom: "40px",
+        zIndex: "99999",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "12px 18px",
+        borderRadius: "10px",
+        backgroundColor:
+          "#0f172a",
+        color: "#ffffff",
+        fontFamily:
+          '"Pretendard", sans-serif',
+        fontSize: "14px",
+        fontWeight: "600",
+        lineHeight: "1.4",
+        whiteSpace: "nowrap",
+        boxShadow:
+          "0 8px 24px rgb(15 23 42 / 24%)",
+        transform:
+          "translateX(-50%)",
+        opacity: "0",
+        transition:
+          "opacity 160ms ease, bottom 160ms ease"
+      }
+    );
+
+    document.body.appendChild(
+      toast
+    );
+
+    requestAnimationFrame(() => {
+      toast.style.opacity =
+        "1";
+
+      toast.style.bottom =
+        "48px";
+    });
+
+    window.setTimeout(() => {
+      toast.style.opacity =
+        "0";
+
+      toast.style.bottom =
+        "40px";
+
+      window.setTimeout(() => {
+        toast.remove();
+      }, 180);
+    }, 1800);
   };
 
   const handleShareClick = async () => {
+    const currentUrl =
+      window.location.href;
+
     const shareData = {
-      title: "Golden Step 탐색 정보",
-      text: "현재 탐색 정보를 공유합니다.",
-      url: window.location.href
+      title:
+        "Golden Step 탐색 정보",
+      text:
+        "현재 탐색 정보를 공유합니다.",
+      url:
+        currentUrl
     };
 
     if (navigator.share) {
@@ -150,22 +644,33 @@
         await navigator.share(
           shareData
         );
-      } catch {
-        return;
-      }
 
-      return;
+        return;
+      } catch (error) {
+        if (
+          error &&
+          error.name ===
+          "AbortError"
+        ) {
+          return;
+        }
+      }
     }
 
     try {
-      await navigator.clipboard.writeText(
-        window.location.href
+      await copyText(
+        currentUrl
       );
 
-      alert(
+      showShareToast(
         "공유 링크가 복사되었습니다."
       );
-    } catch {
+    } catch (error) {
+      console.error(
+        "Share link copy error:",
+        error
+      );
+
       alert(
         "공유 링크를 복사하지 못했습니다."
       );
