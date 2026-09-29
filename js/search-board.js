@@ -74,6 +74,26 @@
     return null;
   };
 
+  const getCompletedPriorityIds = () => {
+    const storedValue = sessionStorage.getItem(
+      "goldenStepCompletedPriorities"
+    );
+
+    if (!storedValue) {
+      return [];
+    }
+
+    try {
+      const parsedValue = JSON.parse(storedValue);
+
+      return Array.isArray(parsedValue)
+        ? parsedValue
+        : [];
+    } catch {
+      return [];
+    }
+  };
+
   const encodeShareData = (data) => {
     const json = JSON.stringify(data);
     const bytes = new TextEncoder().encode(json);
@@ -93,9 +113,12 @@
   const createShareUrl = () => {
     const searchData = getStoredSearchData();
     const storedCoordinate = getStoredCoordinate();
+    const completedPriorityIds =
+      getCompletedPriorityIds();
 
     const shareData = {
-      ...searchData
+      ...searchData,
+      completedPriorityIds
     };
 
     if (storedCoordinate) {
@@ -135,6 +158,7 @@
       document.createElement("textarea");
 
     textArea.value = text;
+
     textArea.setAttribute(
       "readonly",
       ""
@@ -329,20 +353,26 @@
 
     priorityCircles = [];
 
+    const completedPriorityIds =
+      getCompletedPriorityIds();
+
     const priorityAreas = [
       {
+        priorityId: "priority-1",
         latOffset: 0.0022,
         lngOffset: -0.0018,
         radius: 150,
         color: "#B98282"
       },
       {
+        priorityId: "priority-2",
         latOffset: -0.0016,
         lngOffset: 0.0024,
         radius: 130,
         color: "#C2A16B"
       },
       {
+        priorityId: "priority-3",
         latOffset: 0.0011,
         lngOffset: 0.0031,
         radius: 120,
@@ -352,6 +382,14 @@
 
     priorityAreas.forEach(
       (area) => {
+        if (
+          completedPriorityIds.includes(
+            area.priorityId
+          )
+        ) {
+          return;
+        }
+
         const circle =
           new naver.maps.Circle({
             map: boardMap,
