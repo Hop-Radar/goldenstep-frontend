@@ -288,6 +288,54 @@
     };
   };
 
+  const createPriorityCircles = (
+    map,
+    latitude,
+    longitude
+  ) => {
+    const priorityAreas = [
+      {
+        latOffset: 0.0022,
+        lngOffset: -0.0018,
+        radius: 150,
+        color: "#B98282"
+      },
+      {
+        latOffset: -0.0016,
+        lngOffset: 0.0024,
+        radius: 130,
+        color: "#C2A16B"
+      },
+      {
+        latOffset: 0.0011,
+        lngOffset: 0.0031,
+        radius: 120,
+        color: "#5B9BD5"
+      }
+    ];
+
+    priorityAreas.forEach(
+      (area) => {
+        new naver.maps.Circle({
+          map,
+          center:
+            new naver.maps.LatLng(
+              latitude +
+              area.latOffset,
+              longitude +
+              area.lngOffset
+            ),
+          radius: area.radius,
+          fillColor: area.color,
+          fillOpacity: 0.22,
+          strokeColor: area.color,
+          strokeOpacity: 0.5,
+          strokeWeight: 1
+        });
+      }
+    );
+  };
+
   const initializeMap = () => {
     if (
       !mapElement ||
@@ -334,6 +382,12 @@
       title:
         "마지막 확인 위치"
     });
+
+    createPriorityCircles(
+      map,
+      location.latitude,
+      location.longitude
+    );
 
     window.setTimeout(() => {
       naver.maps.Event.trigger(
