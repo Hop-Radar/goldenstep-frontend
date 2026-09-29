@@ -1,49 +1,48 @@
 (() => {
   const timeRange = document.querySelector("#time-range");
   const selectedTime = document.querySelector("#selected-time");
-  const drawerCompleteButton = document.querySelector("#drawer-complete-button");
-  const detailButtons = document.querySelectorAll(".detail-button");
   const searchBoardButton = document.querySelector("#search-board-button");
-  const resultMapElement = document.querySelector("#result-map");
-
-  const detailDrawer = document.querySelector("#detail-drawer");
-  const detailDrawerOverlay = document.querySelector("#detail-drawer-overlay");
-  const detailCloseButton = document.querySelector("#detail-close-button");
-
-  const detailPlaceName = document.querySelector("#detail-place-name");
-  const detailAddress = document.querySelector("#detail-address");
-  const detailPriorityBadge = document.querySelector("#detail-priority-badge");
-  const detailDistance = document.querySelector("#detail-distance");
-  const detailWalkingTime = document.querySelector("#detail-walking-time");
-  const detailMapElement = document.querySelector("#detail-map");
-  const routeCheckButton = document.querySelector("#route-check-button");
 
   const priorityList = document.querySelector("#priority-list");
-
   const completedPrioritySection = document.querySelector(
     "#completed-priority-section"
   );
-
   const completedPriorityList = document.querySelector(
     "#completed-priority-list"
   );
 
-  const completeModal = document.querySelector("#complete-modal");
+  const detailButtons = document.querySelectorAll(".detail-button");
+  const detailDrawer = document.querySelector("#detail-drawer");
+  const detailDrawerOverlay = document.querySelector(
+    "#detail-drawer-overlay"
+  );
+  const detailCloseButton = document.querySelector("#detail-close-button");
 
+  const detailPriorityBadge = document.querySelector(
+    "#detail-priority-badge"
+  );
+  const detailPlaceName = document.querySelector("#detail-place-name");
+  const detailAddress = document.querySelector("#detail-address");
+  const detailDistance = document.querySelector("#detail-distance");
+  const detailWalkingTime = document.querySelector(
+    "#detail-walking-time"
+  );
+
+  const routeCheckButton = document.querySelector("#route-check-button");
+  const drawerCompleteButton = document.querySelector(
+    "#drawer-complete-button"
+  );
+
+  const completeModal = document.querySelector("#complete-modal");
   const completeModalLocation = document.querySelector(
     "#complete-modal-location"
   );
-
   const completeModalCancel = document.querySelector(
     "#complete-modal-cancel"
   );
-
   const completeModalConfirm = document.querySelector(
     "#complete-modal-confirm"
   );
-
-  let pendingCompleteItem = null;
-  let activeDetailLocation = null;
 
   const TIME_POINTS = [
     {
@@ -59,10 +58,6 @@
       minutes: 60
     },
     {
-      label: "2시간",
-      minutes: 120
-    },
-    {
       label: "3시간",
       minutes: 180
     },
@@ -72,15 +67,96 @@
     }
   ];
 
+  const DEFAULT_CENTER = {
+    lat: 37.5665,
+    lng: 126.978
+  };
+
+  const DEFAULT_ZOOM = 15;
+
+  let resultMap = null;
+  let detailMap = null;
+  let resultCircles = [];
+  let detailMarkers = [];
+  let detailPolyline = null;
+  let activeDetailLocation = null;
+  let pendingCompleteItem = null;
+
+  const getSearchLocation = () => {
+    const storedLocation = sessionStorage.getItem(
+      "goldenStepSearchLocation"
+    );
+
+    if (!storedLocation) {
+      return DEFAULT_CENTER;
+    }
+
+    try {
+      const parsedLocation = JSON.parse(storedLocation);
+
+      const lat = Number(parsedLocation.lat);
+      const lng = Number(parsedLocation.lng);
+
+      if (
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        return {
+          lat,
+          lng
+        };
+      }
+
+      return DEFAULT_CENTER;
+    } catch {
+      return DEFAULT_CENTER;
+    }
+  };
+
+  const SEARCH_LOCATION = getSearchLocation();
+
   const MOCK_ANALYSIS_RESULTS = [
     {
       minutes: 0,
       areas: [
         {
-          latitude: 37.6067,
-          longitude: 127.0415,
+          id: "location-1",
+          priorityId: "priority-1",
+          name: "한강공원 산책로",
+          address: "서울시 OO구 OO동",
           priority: "high",
-          radius: 120
+          priorityLabel: "높은 우선도",
+          distance: "약 450m",
+          walkingTime: "약 6분",
+          latOffset: 0.0022,
+          lngOffset: -0.0018,
+          radius: 180
+        },
+        {
+          id: "location-2",
+          priorityId: "priority-2",
+          name: "중앙초등학교 주변",
+          address: "서울시 OO구 OO동",
+          priority: "medium",
+          priorityLabel: "중간 우선도",
+          distance: "약 720m",
+          walkingTime: "약 10분",
+          latOffset: -0.0024,
+          lngOffset: 0.0022,
+          radius: 220
+        },
+        {
+          id: "location-3",
+          priorityId: "priority-3",
+          name: "OO공원",
+          address: "서울시 OO구 OO동",
+          priority: "low",
+          priorityLabel: "낮은 우선도",
+          distance: "약 980m",
+          walkingTime: "약 14분",
+          latOffset: 0.0006,
+          lngOffset: 0.0044,
+          radius: 260
         }
       ]
     },
@@ -88,22 +164,43 @@
       minutes: 30,
       areas: [
         {
-          latitude: 37.6067,
-          longitude: 127.0415,
+          id: "location-1",
+          priorityId: "priority-1",
+          name: "한강공원 산책로",
+          address: "서울시 OO구 OO동",
           priority: "high",
-          radius: 180
+          priorityLabel: "높은 우선도",
+          distance: "약 650m",
+          walkingTime: "약 9분",
+          latOffset: 0.003,
+          lngOffset: -0.0026,
+          radius: 240
         },
         {
-          latitude: 37.6080,
-          longitude: 127.0398,
+          id: "location-2",
+          priorityId: "priority-2",
+          name: "중앙초등학교 주변",
+          address: "서울시 OO구 OO동",
           priority: "medium",
-          radius: 140
+          priorityLabel: "중간 우선도",
+          distance: "약 900m",
+          walkingTime: "약 13분",
+          latOffset: -0.0032,
+          lngOffset: 0.003,
+          radius: 280
         },
         {
-          latitude: 37.6054,
-          longitude: 127.0430,
+          id: "location-3",
+          priorityId: "priority-3",
+          name: "OO공원",
+          address: "서울시 OO구 OO동",
           priority: "low",
-          radius: 130
+          priorityLabel: "낮은 우선도",
+          distance: "약 1.2km",
+          walkingTime: "약 17분",
+          latOffset: 0.001,
+          lngOffset: 0.0054,
+          radius: 320
         }
       ]
     },
@@ -111,63 +208,43 @@
       minutes: 60,
       areas: [
         {
-          latitude: 37.6067,
-          longitude: 127.0415,
+          id: "location-1",
+          priorityId: "priority-1",
+          name: "한강공원 산책로",
+          address: "서울시 OO구 OO동",
           priority: "high",
-          radius: 240
-        },
-        {
-          latitude: 37.6085,
-          longitude: 127.0390,
-          priority: "medium",
-          radius: 190
-        },
-        {
-          latitude: 37.6048,
-          longitude: 127.0440,
-          priority: "low",
-          radius: 170
-        },
-        {
-          latitude: 37.6092,
-          longitude: 127.0430,
-          priority: "low",
-          radius: 150
-        }
-      ]
-    },
-    {
-      minutes: 120,
-      areas: [
-        {
-          latitude: 37.6067,
-          longitude: 127.0415,
-          priority: "high",
+          priorityLabel: "높은 우선도",
+          distance: "약 850m",
+          walkingTime: "약 12분",
+          latOffset: 0.0038,
+          lngOffset: -0.0034,
           radius: 300
         },
         {
-          latitude: 37.6090,
-          longitude: 127.0385,
+          id: "location-2",
+          priorityId: "priority-2",
+          name: "중앙초등학교 주변",
+          address: "서울시 OO구 OO동",
           priority: "medium",
-          radius: 250
+          priorityLabel: "중간 우선도",
+          distance: "약 1.1km",
+          walkingTime: "약 16분",
+          latOffset: -0.004,
+          lngOffset: 0.0038,
+          radius: 350
         },
         {
-          latitude: 37.6040,
-          longitude: 127.0448,
-          priority: "medium",
-          radius: 220
-        },
-        {
-          latitude: 37.6100,
-          longitude: 127.0438,
+          id: "location-3",
+          priorityId: "priority-3",
+          name: "OO공원",
+          address: "서울시 OO구 OO동",
           priority: "low",
-          radius: 210
-        },
-        {
-          latitude: 37.6028,
-          longitude: 127.0400,
-          priority: "low",
-          radius: 190
+          priorityLabel: "낮은 우선도",
+          distance: "약 1.5km",
+          walkingTime: "약 21분",
+          latOffset: 0.0014,
+          lngOffset: 0.0064,
+          radius: 400
         }
       ]
     },
@@ -175,34 +252,43 @@
       minutes: 180,
       areas: [
         {
-          latitude: 37.6067,
-          longitude: 127.0415,
+          id: "location-1",
+          priorityId: "priority-1",
+          name: "한강공원 산책로",
+          address: "서울시 OO구 OO동",
           priority: "high",
-          radius: 360
+          priorityLabel: "높은 우선도",
+          distance: "약 1.5km",
+          walkingTime: "약 22분",
+          latOffset: 0.0058,
+          lngOffset: -0.0054,
+          radius: 460
         },
         {
-          latitude: 37.6095,
-          longitude: 127.0378,
+          id: "location-2",
+          priorityId: "priority-2",
+          name: "중앙초등학교 주변",
+          address: "서울시 OO구 OO동",
           priority: "medium",
-          radius: 300
+          priorityLabel: "중간 우선도",
+          distance: "약 1.9km",
+          walkingTime: "약 27분",
+          latOffset: -0.006,
+          lngOffset: 0.0058,
+          radius: 520
         },
         {
-          latitude: 37.6035,
-          longitude: 127.0455,
-          priority: "medium",
-          radius: 280
-        },
-        {
-          latitude: 37.6110,
-          longitude: 127.0445,
+          id: "location-3",
+          priorityId: "priority-3",
+          name: "OO공원",
+          address: "서울시 OO구 OO동",
           priority: "low",
-          radius: 260
-        },
-        {
-          latitude: 37.6018,
-          longitude: 127.0385,
-          priority: "low",
-          radius: 240
+          priorityLabel: "낮은 우선도",
+          distance: "약 2.4km",
+          walkingTime: "약 34분",
+          latOffset: 0.0024,
+          lngOffset: 0.0086,
+          radius: 590
         }
       ]
     },
@@ -210,390 +296,261 @@
       minutes: 360,
       areas: [
         {
-          latitude: 37.6067,
-          longitude: 127.0415,
+          id: "location-1",
+          priorityId: "priority-1",
+          name: "한강공원 산책로",
+          address: "서울시 OO구 OO동",
           priority: "high",
-          radius: 430
+          priorityLabel: "높은 우선도",
+          distance: "약 2.4km",
+          walkingTime: "약 34분",
+          latOffset: 0.0082,
+          lngOffset: -0.0076,
+          radius: 650
         },
         {
-          latitude: 37.6100,
-          longitude: 127.0370,
+          id: "location-2",
+          priorityId: "priority-2",
+          name: "중앙초등학교 주변",
+          address: "서울시 OO구 OO동",
           priority: "medium",
-          radius: 370
+          priorityLabel: "중간 우선도",
+          distance: "약 3.0km",
+          walkingTime: "약 43분",
+          latOffset: -0.0086,
+          lngOffset: 0.008,
+          radius: 720
         },
         {
-          latitude: 37.6030,
-          longitude: 127.0465,
-          priority: "medium",
-          radius: 350
-        },
-        {
-          latitude: 37.6120,
-          longitude: 127.0455,
+          id: "location-3",
+          priorityId: "priority-3",
+          name: "OO공원",
+          address: "서울시 OO구 OO동",
           priority: "low",
-          radius: 330
-        },
-        {
-          latitude: 37.6005,
-          longitude: 127.0375,
-          priority: "low",
-          radius: 310
-        },
-        {
-          latitude: 37.6090,
-          longitude: 127.0490,
-          priority: "low",
-          radius: 280
+          priorityLabel: "낮은 우선도",
+          distance: "약 3.8km",
+          walkingTime: "약 54분",
+          latOffset: 0.0038,
+          lngOffset: 0.0118,
+          radius: 800
         }
       ]
     }
   ];
 
-  const MOCK_PRIORITY_LOCATIONS = [
-    {
-      id: "location-1",
+  const LOCATION_DETAILS = {
+    "location-1": {
       priorityId: "priority-1",
-      name: "한강공원 산책로",
-      address: "서울시 OO구 OO동",
       priority: "high",
       priorityLabel: "높은 우선도",
-      latitudeOffset: 0.0022,
-      longitudeOffset: -0.0018
-    },
-    {
-      id: "location-2",
-      priorityId: "priority-2",
-      name: "중앙초등학교 주변",
+      name: "한강공원 산책로",
       address: "서울시 OO구 OO동",
+      distance: "약 450m",
+      walkingTime: "약 6분",
+      latOffset: 0.0022,
+      lngOffset: -0.0018
+    },
+    "location-2": {
+      priorityId: "priority-2",
       priority: "medium",
       priorityLabel: "중간 우선도",
-      latitudeOffset: -0.0017,
-      longitudeOffset: 0.0026
-    },
-    {
-      id: "location-3",
-      priorityId: "priority-3",
-      name: "OO공원",
+      name: "중앙초등학교 주변",
       address: "서울시 OO구 OO동",
+      distance: "약 720m",
+      walkingTime: "약 10분",
+      latOffset: -0.0024,
+      lngOffset: 0.0022
+    },
+    "location-3": {
+      priorityId: "priority-3",
       priority: "low",
       priorityLabel: "낮은 우선도",
-      latitudeOffset: 0.0031,
-      longitudeOffset: 0.0021
-    }
-  ];
-
-  const DEFAULT_LOCATION = {
-    latitude: 37.6067,
-    longitude: 127.0415
-  };
-
-  const PRIORITY_STYLES = {
-    high: {
-      strokeColor: "#B98282",
-      fillColor: "#B98282",
-      strokeOpacity: 0.75,
-      fillOpacity: 0.34
-    },
-    medium: {
-      strokeColor: "#C2A16B",
-      fillColor: "#C2A16B",
-      strokeOpacity: 0.7,
-      fillOpacity: 0.28
-    },
-    low: {
-      strokeColor: "#78BCE8",
-      fillColor: "#78BCE8",
-      strokeOpacity: 0.65,
-      fillOpacity: 0.23
+      name: "OO공원",
+      address: "서울시 OO구 OO동",
+      distance: "약 980m",
+      walkingTime: "약 14분",
+      latOffset: 0.0006,
+      lngOffset: 0.0044
     }
   };
 
-  let resultMap = null;
-  let lastLocationMarker = null;
-  let priorityCircles = [];
-
-  let detailMap = null;
-  let detailStartMarker = null;
-  let detailDestinationMarker = null;
-  let detailRouteLine = null;
-
-  const getStoredLocation = () => {
-    try {
-      const storedData = sessionStorage.getItem(
-        "goldenStepSearchData"
-      );
-
-      if (!storedData) {
-        return DEFAULT_LOCATION;
-      }
-
-      const parsedData = JSON.parse(storedData);
-
-      const latitude = Number(parsedData.latitude);
-      const longitude = Number(parsedData.longitude);
-
-      if (
-        !Number.isFinite(latitude) ||
-        !Number.isFinite(longitude)
-      ) {
-        return DEFAULT_LOCATION;
-      }
-
-      return {
-        latitude,
-        longitude
-      };
-    } catch {
-      return DEFAULT_LOCATION;
-    }
-  };
-
-  const getDestinationLocation = (location) => {
-    const baseLocation = getStoredLocation();
-
-    return {
-      latitude:
-        baseLocation.latitude +
-        location.latitudeOffset,
-
-      longitude:
-        baseLocation.longitude +
-        location.longitudeOffset
-    };
-  };
-
-  const calculateDistance = (
-    startLatitude,
-    startLongitude,
-    endLatitude,
-    endLongitude
-  ) => {
-    const earthRadius = 6371000;
-
-    const toRadians = (degree) =>
-      degree * (Math.PI / 180);
-
-    const latitudeDifference =
-      toRadians(
-        endLatitude - startLatitude
-      );
-
-    const longitudeDifference =
-      toRadians(
-        endLongitude - startLongitude
-      );
-
-    const startLatitudeRadians =
-      toRadians(startLatitude);
-
-    const endLatitudeRadians =
-      toRadians(endLatitude);
-
-    const value =
-      Math.sin(latitudeDifference / 2) ** 2 +
-      Math.cos(startLatitudeRadians) *
-      Math.cos(endLatitudeRadians) *
-      Math.sin(longitudeDifference / 2) ** 2;
-
-    const angle =
-      2 *
-      Math.atan2(
-        Math.sqrt(value),
-        Math.sqrt(1 - value)
-      );
-
-    return Math.round(
-      earthRadius * angle
+  const getCompletedPriorityIds = () => {
+    const storedValue = sessionStorage.getItem(
+      "goldenStepCompletedPriorities"
     );
+
+    if (!storedValue) {
+      return [];
+    }
+
+    try {
+      const parsedValue = JSON.parse(storedValue);
+
+      return Array.isArray(parsedValue)
+        ? parsedValue
+        : [];
+    } catch {
+      return [];
+    }
   };
 
-  const getWalkingMinutes = (distance) => {
-    const walkingMetersPerMinute = 67;
+  const saveCompletedPriorityIds = () => {
+    if (!completedPriorityList) {
+      return;
+    }
 
-    return Math.max(
-      1,
-      Math.ceil(
-        distance /
-        walkingMetersPerMinute
+    const completedItems = Array.from(
+      completedPriorityList.querySelectorAll(
+        ".priority-item"
       )
     );
+
+    const completedIds = completedItems
+      .map((item) => item.dataset.priorityId)
+      .filter(Boolean);
+
+    sessionStorage.setItem(
+      "goldenStepCompletedPriorities",
+      JSON.stringify(completedIds)
+    );
   };
 
-  const formatDistance = (distance) => {
-    if (distance >= 1000) {
-      return `약 ${(distance / 1000).toFixed(1)}km`;
+  const getNaverLatLng = (lat, lng) => {
+    return new naver.maps.LatLng(
+      lat,
+      lng
+    );
+  };
+
+  const getPriorityColor = (priority) => {
+    if (priority === "high") {
+      return "#B98282";
     }
 
-    return `약 ${distance}m`;
+    if (priority === "medium") {
+      return "#C2A16B";
+    }
+
+    return "#7FB7D8";
+  };
+
+  const clearResultPriorityAreas = () => {
+    resultCircles.forEach((circle) => {
+      circle.setMap(null);
+    });
+
+    resultCircles = [];
+  };
+
+  const renderPriorityAreas = (selectedIndex) => {
+    if (
+      !resultMap ||
+      !MOCK_ANALYSIS_RESULTS[selectedIndex]
+    ) {
+      return;
+    }
+
+    clearResultPriorityAreas();
+
+    const analysis =
+      MOCK_ANALYSIS_RESULTS[selectedIndex];
+
+    const completedPriorityIds =
+      getCompletedPriorityIds();
+
+    analysis.areas.forEach((area) => {
+      if (
+        completedPriorityIds.includes(
+          area.priorityId
+        )
+      ) {
+        return;
+      }
+
+      const lat =
+        SEARCH_LOCATION.lat +
+        area.latOffset;
+
+      const lng =
+        SEARCH_LOCATION.lng +
+        area.lngOffset;
+
+      const position =
+        getNaverLatLng(
+          lat,
+          lng
+        );
+
+      const circle =
+        new naver.maps.Circle({
+          map: resultMap,
+          center: position,
+          radius: area.radius,
+          strokeWeight: 1,
+          strokeColor: getPriorityColor(
+            area.priority
+          ),
+          strokeOpacity: 0.5,
+          fillColor: getPriorityColor(
+            area.priority
+          ),
+          fillOpacity: 0.22
+        });
+
+      resultCircles.push(circle);
+    });
   };
 
   const initializeMap = () => {
+    const mapElement =
+      document.querySelector(
+        "#result-map"
+      );
+
     if (
-      !resultMapElement ||
+      !mapElement ||
       typeof naver === "undefined" ||
       !naver.maps
     ) {
       return;
     }
 
-    const location = getStoredLocation();
-
-    const center =
-      new naver.maps.LatLng(
-        location.latitude,
-        location.longitude
-      );
-
     resultMap =
       new naver.maps.Map(
-        resultMapElement,
+        mapElement,
         {
-          center,
-          zoom: 15,
-          minZoom: 11,
-          maxZoom: 19,
-
+          center: getNaverLatLng(
+            SEARCH_LOCATION.lat,
+            SEARCH_LOCATION.lng
+          ),
+          zoom: DEFAULT_ZOOM,
           zoomControl: true,
-
           zoomControlOptions: {
             position:
               naver.maps.Position.TOP_RIGHT
-          },
-
-          mapTypeControl: false,
-          scaleControl: false,
-          logoControl: true,
-          mapDataControl: false
+          }
         }
       );
 
-    lastLocationMarker =
-      new naver.maps.Marker({
-        position: center,
-        map: resultMap,
-        title: "마지막 확인 위치"
-      });
-
-    renderPriorityAreas(0);
-  };
-
-  const clearPriorityAreas = () => {
-    priorityCircles.forEach(
-      (circle) => {
-        circle.setMap(null);
+    new naver.maps.Marker({
+      map: resultMap,
+      position: getNaverLatLng(
+        SEARCH_LOCATION.lat,
+        SEARCH_LOCATION.lng
+      ),
+      icon: {
+        content: `
+          <div class="search-origin-marker">
+            <span></span>
+          </div>
+        `,
+        anchor:
+          new naver.maps.Point(
+            20,
+            40
+          )
       }
-    );
-
-    priorityCircles = [];
-  };
-
-  const renderPriorityAreas = (
-    selectedIndex
-  ) => {
-    if (!resultMap) {
-      return;
-    }
-
-    clearPriorityAreas();
-
-    const analysisResult =
-      MOCK_ANALYSIS_RESULTS[
-      selectedIndex
-      ];
-
-    if (!analysisResult) {
-      return;
-    }
-
-    const baseLocation =
-      getStoredLocation();
-
-    const latitudeOffset =
-      baseLocation.latitude -
-      DEFAULT_LOCATION.latitude;
-
-    const longitudeOffset =
-      baseLocation.longitude -
-      DEFAULT_LOCATION.longitude;
-
-    analysisResult.areas.forEach(
-      (area) => {
-        const style =
-          PRIORITY_STYLES[
-          area.priority
-          ];
-
-        if (!style) {
-          return;
-        }
-
-        const center =
-          new naver.maps.LatLng(
-            area.latitude +
-            latitudeOffset,
-
-            area.longitude +
-            longitudeOffset
-          );
-
-        const circle =
-          new naver.maps.Circle({
-            map: resultMap,
-            center,
-            radius: area.radius,
-
-            strokeColor:
-              style.strokeColor,
-
-            strokeOpacity:
-              style.strokeOpacity,
-
-            strokeWeight: 1,
-
-            fillColor:
-              style.fillColor,
-
-            fillOpacity:
-              style.fillOpacity,
-
-            clickable: false
-          });
-
-        priorityCircles.push(
-          circle
-        );
-      }
-    );
-  };
-
-  const updateSliderBackground = () => {
-    if (!timeRange) {
-      return;
-    }
-
-    const value =
-      Number(timeRange.value);
-
-    const min =
-      Number(timeRange.min);
-
-    const max =
-      Number(timeRange.max);
-
-    const progress =
-      ((value - min) /
-        (max - min)) *
-      100;
-
-    timeRange.style.background = `
-      linear-gradient(
-        90deg,
-        #1479ed 0%,
-        #1479ed ${progress}%,
-        #dce6f0 ${progress}%,
-        #dce6f0 100%
-      )
-    `;
+    });
   };
 
   const updateTime = () => {
@@ -608,9 +565,7 @@
       Number(timeRange.value);
 
     const selectedPoint =
-      TIME_POINTS[
-      selectedIndex
-      ];
+      TIME_POINTS[selectedIndex];
 
     if (!selectedPoint) {
       return;
@@ -619,7 +574,21 @@
     selectedTime.textContent =
       selectedPoint.label;
 
-    updateSliderBackground();
+    const maxValue =
+      Number(timeRange.max);
+
+    const progress =
+      maxValue > 0
+        ? (
+          selectedIndex /
+          maxValue
+        ) * 100
+        : 0;
+
+    timeRange.style.setProperty(
+      "--range-progress",
+      `${progress}%`
+    );
 
     renderPriorityAreas(
       selectedIndex
@@ -627,55 +596,26 @@
   };
 
   const clearDetailMapObjects = () => {
-    if (detailStartMarker) {
-      detailStartMarker.setMap(null);
-      detailStartMarker = null;
-    }
-
-    if (detailDestinationMarker) {
-      detailDestinationMarker.setMap(null);
-      detailDestinationMarker = null;
-    }
-
-    if (detailRouteLine) {
-      detailRouteLine.setMap(null);
-      detailRouteLine = null;
-    }
-  };
-
-  const fitDetailRoute = (
-    startPosition,
-    destinationPosition
-  ) => {
-    if (!detailMap) {
-      return;
-    }
-
-    const bounds =
-      new naver.maps.LatLngBounds();
-
-    bounds.extend(
-      startPosition
-    );
-
-    bounds.extend(
-      destinationPosition
-    );
-
-    detailMap.fitBounds(
-      bounds,
-      {
-        top: 55,
-        right: 55,
-        bottom: 55,
-        left: 55
+    detailMarkers.forEach(
+      (marker) => {
+        marker.setMap(null);
       }
     );
+
+    detailMarkers = [];
+
+    if (detailPolyline) {
+      detailPolyline.setMap(null);
+      detailPolyline = null;
+    }
   };
 
-  const renderDetailMap = (
-    location
-  ) => {
+  const initializeDetailMap = () => {
+    const detailMapElement =
+      document.querySelector(
+        "#detail-map"
+      );
+
     if (
       !detailMapElement ||
       typeof naver === "undefined" ||
@@ -684,170 +624,164 @@
       return;
     }
 
-    const start =
-      getStoredLocation();
-
-    const destination =
-      getDestinationLocation(
-        location
-      );
-
-    const startPosition =
-      new naver.maps.LatLng(
-        start.latitude,
-        start.longitude
-      );
-
-    const destinationPosition =
-      new naver.maps.LatLng(
-        destination.latitude,
-        destination.longitude
-      );
-
     if (!detailMap) {
       detailMap =
         new naver.maps.Map(
           detailMapElement,
           {
-            center:
-              startPosition,
-
+            center: getNaverLatLng(
+              SEARCH_LOCATION.lat,
+              SEARCH_LOCATION.lng
+            ),
             zoom: 15,
-            minZoom: 11,
-            maxZoom: 20,
-
-            zoomControl: true,
-
-            zoomControlOptions: {
-              position:
-                naver.maps
-                  .Position
-                  .TOP_RIGHT
-            },
-
-            mapTypeControl: false,
-            scaleControl: false,
-            logoControl: true,
-            mapDataControl: false
+            zoomControl: false
           }
         );
+    }
+  };
+
+  const renderDetailRoute = (
+    location
+  ) => {
+    if (!location) {
+      return;
+    }
+
+    initializeDetailMap();
+
+    if (!detailMap) {
+      return;
     }
 
     clearDetailMapObjects();
 
-    detailStartMarker =
+    const startPosition =
+      getNaverLatLng(
+        SEARCH_LOCATION.lat,
+        SEARCH_LOCATION.lng
+      );
+
+    const endPosition =
+      getNaverLatLng(
+        SEARCH_LOCATION.lat +
+        location.latOffset,
+        SEARCH_LOCATION.lng +
+        location.lngOffset
+      );
+
+    const startMarker =
       new naver.maps.Marker({
-        position:
-          startPosition,
-
-        map:
-          detailMap,
-
-        title:
-          "마지막 확인 위치"
+        map: detailMap,
+        position: startPosition,
+        icon: {
+          content: `
+            <div class="detail-start-marker">
+              <span></span>
+            </div>
+          `,
+          anchor:
+            new naver.maps.Point(
+              15,
+              30
+            )
+        }
       });
 
-    detailDestinationMarker =
+    const endMarker =
       new naver.maps.Marker({
-        position:
-          destinationPosition,
-
-        map:
-          detailMap,
-
-        title:
-          location.name
+        map: detailMap,
+        position: endPosition,
+        icon: {
+          content: `
+            <div class="detail-end-marker">
+              <span></span>
+            </div>
+          `,
+          anchor:
+            new naver.maps.Point(
+              15,
+              30
+            )
+        }
       });
 
-    detailRouteLine =
+    detailPolyline =
       new naver.maps.Polyline({
-        map:
-          detailMap,
-
+        map: detailMap,
         path: [
           startPosition,
-          destinationPosition
+          endPosition
         ],
-
-        strokeColor:
-          "#1479ed",
-
-        strokeOpacity:
-          0.9,
-
-        strokeWeight:
-          4
+        strokeColor: "#2563EB",
+        strokeWeight: 5,
+        strokeOpacity: 0.85,
+        strokeStyle: "solid"
       });
 
-    window.setTimeout(
-      () => {
-        naver.maps.Event.trigger(
-          detailMap,
-          "resize"
-        );
+    detailMarkers.push(
+      startMarker,
+      endMarker
+    );
 
-        fitDetailRoute(
-          startPosition,
-          destinationPosition
-        );
-      },
-      320
+    const bounds =
+      new naver.maps.LatLngBounds();
+
+    bounds.extend(startPosition);
+    bounds.extend(endPosition);
+
+    detailMap.fitBounds(
+      bounds,
+      {
+        top: 60,
+        right: 60,
+        bottom: 60,
+        left: 60
+      }
     );
   };
 
-  const updateDetailInformation = (
+  const updateDetailBadge = (
     location
   ) => {
-    const start =
-      getStoredLocation();
+    if (
+      !detailPriorityBadge ||
+      !location
+    ) {
+      return;
+    }
 
-    const destination =
-      getDestinationLocation(
-        location
+    detailPriorityBadge.classList.remove(
+      "is-high",
+      "is-medium",
+      "is-low"
+    );
+
+    detailPriorityBadge.textContent =
+      location.priorityLabel;
+
+    if (
+      location.priority === "high"
+    ) {
+      detailPriorityBadge.classList.add(
+        "is-high"
       );
 
-    const distance =
-      calculateDistance(
-        start.latitude,
-        start.longitude,
-        destination.latitude,
-        destination.longitude
+      return;
+    }
+
+    if (
+      location.priority === "medium"
+    ) {
+      detailPriorityBadge.classList.add(
+        "is-medium"
       );
 
-    const walkingMinutes =
-      getWalkingMinutes(
-        distance
-      );
-
-    if (detailPlaceName) {
-      detailPlaceName.textContent =
-        location.name;
+      return;
     }
 
-    if (detailAddress) {
-      detailAddress.textContent =
-        location.address;
-    }
-
-    if (detailPriorityBadge) {
-      detailPriorityBadge.textContent =
-        location.priorityLabel;
-
-      detailPriorityBadge.className =
-        `detail-priority-badge is-${location.priority}`;
-    }
-
-    if (detailDistance) {
-      detailDistance.textContent =
-        formatDistance(
-          distance
-        );
-    }
-
-    if (detailWalkingTime) {
-      detailWalkingTime.textContent =
-        `약 ${walkingMinutes}분`;
-    }
+    detailPriorityBadge.classList.add(
+      "is-low"
+    );
   };
 
   const openDetailDrawer = (
@@ -864,9 +798,29 @@
     activeDetailLocation =
       location;
 
-    updateDetailInformation(
+    updateDetailBadge(
       location
     );
+
+    if (detailPlaceName) {
+      detailPlaceName.textContent =
+        location.name;
+    }
+
+    if (detailAddress) {
+      detailAddress.textContent =
+        location.address;
+    }
+
+    if (detailDistance) {
+      detailDistance.textContent =
+        location.distance;
+    }
+
+    if (detailWalkingTime) {
+      detailWalkingTime.textContent =
+        location.walkingTime;
+    }
 
     detailDrawer.classList.add(
       "is-open"
@@ -881,12 +835,16 @@
       "false"
     );
 
-    document.body.classList.add(
-      "detail-drawer-open"
-    );
+    document.body.style.overflow =
+      "hidden";
 
-    renderDetailMap(
-      location
+    window.setTimeout(
+      () => {
+        renderDetailRoute(
+          location
+        );
+      },
+      250
     );
   };
 
@@ -911,11 +869,18 @@
       "true"
     );
 
-    document.body.classList.remove(
-      "detail-drawer-open"
-    );
-
     activeDetailLocation = null;
+
+    if (
+      completeModal &&
+      !completeModal.hidden
+    ) {
+      document.body.style.overflow =
+        "hidden";
+    } else {
+      document.body.style.overflow =
+        "";
+    }
   };
 
   const handleDetailClick = (
@@ -927,16 +892,10 @@
     const locationId =
       button.dataset.locationId;
 
-    if (!locationId) {
-      return;
-    }
-
     const location =
-      MOCK_PRIORITY_LOCATIONS.find(
-        (item) =>
-          item.id ===
-          locationId
-      );
+      LOCATION_DETAILS[
+      locationId
+      ];
 
     if (!location) {
       return;
@@ -948,98 +907,12 @@
   };
 
   const handleRouteCheck = () => {
-    if (
-      !activeDetailLocation ||
-      !detailMap ||
-      typeof naver === "undefined" ||
-      !naver.maps
-    ) {
+    if (!activeDetailLocation) {
       return;
     }
 
-    const start =
-      getStoredLocation();
-
-    const destination =
-      getDestinationLocation(
-        activeDetailLocation
-      );
-
-    const startPosition =
-      new naver.maps.LatLng(
-        start.latitude,
-        start.longitude
-      );
-
-    const destinationPosition =
-      new naver.maps.LatLng(
-        destination.latitude,
-        destination.longitude
-      );
-
-    naver.maps.Event.trigger(
-      detailMap,
-      "resize"
-    );
-
-    fitDetailRoute(
-      startPosition,
-      destinationPosition
-    );
-  };
-
-  const getCompletedPriorityIds = () => {
-    try {
-      const storedValue =
-        sessionStorage.getItem(
-          "goldenStepCompletedPriorities"
-        );
-
-      if (!storedValue) {
-        return [];
-      }
-
-      const parsedValue =
-        JSON.parse(
-          storedValue
-        );
-
-      return Array.isArray(
-        parsedValue
-      )
-        ? parsedValue
-        : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const saveCompletedPriorityIds = () => {
-    if (!completedPriorityList) {
-      return;
-    }
-
-    const completedItems =
-      Array.from(
-        completedPriorityList
-          .querySelectorAll(
-            ".priority-item"
-          )
-      );
-
-    const completedIds =
-      completedItems
-        .map(
-          (item) =>
-            item.dataset.priorityId
-        )
-        .filter(Boolean);
-
-    sessionStorage.setItem(
-      "goldenStepCompletedPriorities",
-      JSON.stringify(
-        completedIds
-      )
+    renderDetailRoute(
+      activeDetailLocation
     );
   };
 
@@ -1095,13 +968,8 @@
     text.textContent =
       "탐색 완료";
 
-    status.appendChild(
-      icon
-    );
-
-    status.appendChild(
-      text
-    );
+    status.appendChild(icon);
+    status.appendChild(text);
 
     return status;
   };
@@ -1180,8 +1048,7 @@
         ? locationName.textContent.trim()
         : "선택한 지역";
 
-    completeModal.hidden =
-      false;
+    completeModal.hidden = false;
 
     document.body.style.overflow =
       "hidden";
@@ -1192,11 +1059,9 @@
       return;
     }
 
-    completeModal.hidden =
-      true;
+    completeModal.hidden = true;
 
-    pendingCompleteItem =
-      null;
+    pendingCompleteItem = null;
 
     if (
       detailDrawer &&
@@ -1250,15 +1115,22 @@
       pendingCompleteItem;
 
     if (completeModal) {
-      completeModal.hidden =
-        true;
+      completeModal.hidden = true;
     }
 
-    pendingCompleteItem =
-      null;
+    pendingCompleteItem = null;
 
     moveItemToCompleted(
       completedItem
+    );
+
+    const selectedIndex =
+      timeRange
+        ? Number(timeRange.value)
+        : 0;
+
+    renderPriorityAreas(
+      selectedIndex
     );
 
     closeDetailDrawer();

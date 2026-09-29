@@ -622,20 +622,16 @@
   left: 0%;
 }
 
-.point-20 {
-  left: 20%;
+.point-25 {
+  left: 25%;
 }
 
-.point-40 {
-  left: 40%;
+.point-50 {
+  left: 50%;
 }
 
-.point-60 {
-  left: 60%;
-}
-
-.point-80 {
-  left: 80%;
+.point-75 {
+  left: 75%;
 }
 
 .point-100 {
@@ -660,29 +656,27 @@
 
 .label-0 {
   left: 0%;
-  transform: none;
+  transform: translateX(0);
 }
 
-.label-20 {
-  left: 20%;
+.label-25 {
+  left: 25%;
+  transform: translateX(-50%);
 }
 
-.label-40 {
-  left: 40%;
+.label-50 {
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.label-60 {
-  left: 60%;
-}
-
-.label-80 {
-  left: 80%;
+.label-75 {
+  left: 75%;
+  transform: translateX(-50%);
 }
 
 .label-100 {
-  right: 0;
-  left: auto;
-  transform: none;
+  left: 100%;
+  transform: translateX(-100%);
 }
 
 .priority-section {
