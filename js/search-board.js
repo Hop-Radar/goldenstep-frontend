@@ -596,6 +596,19 @@
     );
   }
 
+  window.addEventListener("pageshow", () => {
+    const shareToast =
+      document.querySelector(
+        ".share-copy-toast"
+      );
+
+    if (shareToast) {
+      shareToast.remove();
+    }
+
+    isSharing = false;
+  });
+
   initializeBoardMap();
   calculateElapsedTime();
 })();
