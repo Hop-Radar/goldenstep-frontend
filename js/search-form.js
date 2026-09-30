@@ -847,28 +847,34 @@ const renderLocationSearchResults = (
     false;
 };
 
-const searchMockPlaces = (query) => {
-  const normalizedQuery =
-    query.trim().toLowerCase();
+const searchPlaces = async (query) => {
+  const response = await fetch(
+    `http://127.0.0.1:8080/api/maps/places?query=${encodeURIComponent(query)}`,
+    {
+      method: "GET",
+      credentials: "include"
+    }
+  );
 
-  if (!normalizedQuery) {
-    return [];
+  let responseData = null;
+
+  try {
+    responseData = await response.json();
+  } catch (error) {
+    responseData = null;
   }
 
-  return MOCK_PLACES.filter((place) => {
-    const searchableText = [
-      place.name,
-      place.roadAddress,
-      place.jibunAddress
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+  if (!response.ok) {
+    const message =
+      responseData?.message ||
+      "장소 검색에 실패했습니다.";
 
-    return searchableText.includes(
-      normalizedQuery
-    );
-  });
+    throw new Error(message);
+  }
+
+  return Array.isArray(responseData)
+    ? responseData
+    : [];
 };
 
 const selectMockPlace = (
@@ -1055,7 +1061,7 @@ const renderMockPlaceResults = (
     false;
 };
 
-const handleLocationSearch = () => {
+const handleLocationSearch = async () => {
   if (!lastLocation) {
     return;
   }
@@ -1069,64 +1075,36 @@ const handleLocationSearch = () => {
     return;
   }
 
-  if (
-    typeof naver === "undefined" ||
-    !naver.maps ||
-    !naver.maps.Service
-  ) {
-    showSearchMessage(
-      "지도 서비스를 불러오지 못했습니다."
-    );
-
-    return;
-  }
-
   showSearchMessage(
     "장소 또는 주소를 검색하고 있습니다."
   );
 
-  naver.maps.Service.geocode(
-    {
-      query: keyword
-    },
-    (status, response) => {
-      if (
-        status ===
-        naver.maps.Service.Status.OK
-      ) {
-        const addresses =
-          response.v2.addresses ||
-          [];
+  try {
+    const places =
+      await searchPlaces(keyword);
 
-        if (
-          addresses.length > 0
-        ) {
-          renderLocationSearchResults(
-            addresses
-          );
-
-          return;
-        }
-      }
-
-      const places =
-        searchMockPlaces(
-          keyword
-        );
-
-      if (places.length > 0) {
-        renderMockPlaceResults(
-          places
-        );
-
-        return;
-      }
-
-      showSearchMessage(
-        "검색 결과를 찾을 수 없습니다."
+    if (places.length > 0) {
+      renderMockPlaceResults(
+        places
       );
+
+      return;
     }
-  );
+
+    showSearchMessage(
+      "검색 결과를 찾을 수 없습니다."
+    );
+  } catch (error) {
+    console.error(
+      "Place search API error:",
+      error
+    );
+
+    showSearchMessage(
+      error.message ||
+      "장소 검색 중 오류가 발생했습니다."
+    );
+  }
 };
 
 const handleConfirmLocation = () => {
@@ -1732,7 +1710,139 @@ const validateLastSeenMinute = () => {
   return false;
 };
 
-const handleSearchFormSubmit = (
+const PERSON_TYPE_API_VALUES = {
+  child: "CHILD",
+  teenager: "TEEN",
+  "adult-male": "ADULT_MALE",
+  "adult-female": "ADULT_FEMALE",
+  "senior-male": "OLDER_ADULT",
+  "senior-female": "OLDER_ADULT"
+};
+
+const CONDITION_STATUS_API_VALUES = {
+  none: "NONE",
+  yes: "YES",
+  unknown: "UNKNOWN"
+};
+
+const getApiAge = () => {
+  if (
+    !personAge ||
+    !personAge.value
+  ) {
+    return null;
+  }
+
+  if (
+    personAge.value ===
+    "under-10"
+  ) {
+    return 10;
+  }
+
+  if (
+    personAge.value ===
+    "over-85"
+  ) {
+    return 85;
+  }
+
+  const age =
+    Number(personAge.value);
+
+  return Number.isInteger(age)
+    ? age
+    : null;
+};
+
+const createSearchRequestData = (
+  searchData
+) => {
+  return {
+    lastLat:
+      searchData.latitude,
+
+    lastLng:
+      searchData.longitude,
+
+    lastAddress:
+      searchData.roadAddress ||
+      searchData.jibunAddress ||
+      searchData.address ||
+      null,
+
+    lastSeenAt:
+      `${searchData.lastSeenTime}:00`,
+
+    personType:
+      PERSON_TYPE_API_VALUES[
+      searchData.personType
+      ],
+
+    age:
+      getApiAge(),
+
+    disabilityStatus:
+      CONDITION_STATUS_API_VALUES[
+      searchData.disabilityStatus
+      ],
+
+    diseaseStatus:
+      CONDITION_STATUS_API_VALUES[
+      searchData.diseaseStatus
+      ],
+
+    physicalFeatures:
+      searchData.additionalInfo ||
+      null
+  };
+};
+
+const requestSearchAnalysis = async (
+  searchData
+) => {
+  const requestData =
+    createSearchRequestData(
+      searchData
+    );
+
+  const response =
+    await fetch(
+      "http://127.0.0.1:8080/api/search/input",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify(
+          requestData
+        )
+      }
+    );
+
+  let responseData = null;
+
+  try {
+    responseData =
+      await response.json();
+  } catch (error) {
+    responseData = null;
+  }
+
+  if (!response.ok) {
+    const message =
+      responseData?.message ||
+      "탐색 정보를 전송하지 못했습니다.";
+
+    throw new Error(message);
+  }
+
+  return responseData;
+};
+
+const handleSearchFormSubmit = async (
   event
 ) => {
   event.preventDefault();
@@ -1843,19 +1953,60 @@ const handleSearchFormSubmit = (
         : ""
   };
 
-  sessionStorage.removeItem(
-    "goldenStepCompletedPriorities"
-  );
+  try {
+    const responseData =
+      await requestSearchAnalysis(
+        searchData
+      );
 
-  sessionStorage.setItem(
-    "goldenStepSearchData",
-    JSON.stringify(
-      searchData
-    )
-  );
+    sessionStorage.removeItem(
+      "goldenStepCompletedPriorities"
+    );
 
-  window.location.href =
-    "./analysis-loading.html";
+    sessionStorage.setItem(
+      "goldenStepSearchData",
+      JSON.stringify(
+        searchData
+      )
+    );
+
+    sessionStorage.setItem(
+      "goldenStepSessionId",
+      String(
+        responseData.sessionId
+      )
+    );
+
+    sessionStorage.setItem(
+      "goldenStepRunId",
+      String(
+        responseData.runId
+      )
+    );
+
+    sessionStorage.setItem(
+      "goldenStepAnalysisStatus",
+      responseData.status
+    );
+
+    sessionStorage.setItem(
+      "goldenStepExpiresAt",
+      responseData.expiresAt
+    );
+
+    window.location.href =
+      "./analysis-loading.html";
+  } catch (error) {
+    console.error(
+      "Search API error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "탐색 정보를 전송하지 못했습니다. 잠시 후 다시 시도해주세요."
+    );
+  }
 };
 
 initializeTimeOptions();

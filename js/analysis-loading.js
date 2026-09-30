@@ -3,9 +3,15 @@ const progressValue = document.querySelector("#progress-value");
 const progressTrack = document.querySelector(".progress-track");
 const analysisSteps = document.querySelectorAll(".analysis-step");
 
+const API_BASE_URL = "http://127.0.0.1:8080";
+const STATUS_CHECK_INTERVAL = 1000;
+const MAX_WAITING_PROGRESS = 92;
+
 let progress = 0;
 let progressInterval = null;
+let statusInterval = null;
 let isCompleted = false;
+let isCheckingStatus = false;
 
 const getActiveStep = () => {
   if (progress < 25) {
@@ -116,6 +122,18 @@ const moveToSearchResult = () => {
   window.location.href = "./search-result.html";
 };
 
+const stopIntervals = () => {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+
+  if (statusInterval) {
+    clearInterval(statusInterval);
+    statusInterval = null;
+  }
+};
+
 const completeAnalysis = () => {
   if (isCompleted) {
     return;
@@ -124,11 +142,8 @@ const completeAnalysis = () => {
   isCompleted = true;
   progress = 100;
 
+  stopIntervals();
   updateProgress();
-
-  if (progressInterval) {
-    clearInterval(progressInterval);
-  }
 
   window.setTimeout(
     moveToSearchResult,
@@ -136,24 +151,118 @@ const completeAnalysis = () => {
   );
 };
 
+const handleAnalysisFailure = () => {
+  stopIntervals();
+
+  alert(
+    "탐색 분석 중 오류가 발생했습니다. 다시 시도해주세요."
+  );
+
+  window.location.href = "./search-form.html";
+};
+
 const increaseProgress = () => {
-  if (progress >= 100) {
-    completeAnalysis();
+  if (
+    isCompleted ||
+    progress >= MAX_WAITING_PROGRESS
+  ) {
     return;
   }
 
   const increaseAmount =
-    Math.floor(Math.random() * 3) + 1;
+    Math.floor(Math.random() * 2) + 1;
 
   progress = Math.min(
     progress + increaseAmount,
-    100
+    MAX_WAITING_PROGRESS
   );
 
   updateProgress();
+};
 
-  if (progress >= 100) {
-    completeAnalysis();
+const checkAnalysisStatus = async () => {
+  if (isCompleted || isCheckingStatus) {
+    return;
+  }
+
+  const runId =
+    sessionStorage.getItem(
+      "goldenStepRunId"
+    );
+
+  if (!runId) {
+    stopIntervals();
+
+    alert(
+      "분석 실행 정보를 찾을 수 없습니다. 탐색 정보를 다시 입력해주세요."
+    );
+
+    window.location.href =
+      "./search-form.html";
+
+    return;
+  }
+
+  isCheckingStatus = true;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/search/analysis/${runId}`,
+      {
+        method: "GET",
+        credentials: "include"
+      }
+    );
+
+    let responseData = null;
+
+    try {
+      responseData = await response.json();
+    } catch (error) {
+      responseData = null;
+    }
+
+    if (!response.ok) {
+      const message =
+        responseData?.message ||
+        "분석 상태를 확인하지 못했습니다.";
+
+      throw new Error(message);
+    }
+
+    sessionStorage.setItem(
+      "goldenStepAnalysisStatus",
+      responseData.status
+    );
+
+    if (
+      responseData.status ===
+      "COMPLETED"
+    ) {
+      completeAnalysis();
+      return;
+    }
+
+    if (
+      responseData.status ===
+      "FAILED"
+    ) {
+      handleAnalysisFailure();
+    }
+  } catch (error) {
+    console.error(
+      "Analysis status API error:",
+      error
+    );
+
+    stopIntervals();
+
+    alert(
+      error.message ||
+      "분석 상태를 확인하지 못했습니다."
+    );
+  } finally {
+    isCheckingStatus = false;
   }
 };
 
@@ -162,4 +271,11 @@ updateProgress();
 progressInterval = window.setInterval(
   increaseProgress,
   120
+);
+
+checkAnalysisStatus();
+
+statusInterval = window.setInterval(
+  checkAnalysisStatus,
+  STATUS_CHECK_INTERVAL
 );

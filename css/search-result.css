@@ -2689,3 +2689,20 @@ body.detail-drawer-open {
     grid-row: 2;
   }
 }
+
+.priority-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.priority-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.priority-actions {
+  margin-left: auto;
+  flex-shrink: 0;
+}

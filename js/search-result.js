@@ -3,30 +3,62 @@
   const selectedTime = document.querySelector("#selected-time");
   const searchBoardButton = document.querySelector("#search-board-button");
   const priorityList = document.querySelector("#priority-list");
-  const completedPrioritySection = document.querySelector("#completed-priority-section");
-  const completedPriorityList = document.querySelector("#completed-priority-list");
+  const completedPrioritySection = document.querySelector(
+    "#completed-priority-section"
+  );
+  const completedPriorityList = document.querySelector(
+    "#completed-priority-list"
+  );
   const detailButtons = document.querySelectorAll(".detail-button");
   const detailDrawer = document.querySelector("#detail-drawer");
-  const detailDrawerOverlay = document.querySelector("#detail-drawer-overlay");
+  const detailDrawerOverlay = document.querySelector(
+    "#detail-drawer-overlay"
+  );
   const detailCloseButton = document.querySelector("#detail-close-button");
-  const detailPriorityBadge = document.querySelector("#detail-priority-badge");
+  const detailPriorityBadge = document.querySelector(
+    "#detail-priority-badge"
+  );
   const detailPlaceName = document.querySelector("#detail-place-name");
   const detailDistance = document.querySelector("#detail-distance");
-  const detailWalkingTime = document.querySelector("#detail-walking-time");
+  const detailWalkingTime = document.querySelector(
+    "#detail-walking-time"
+  );
   const routeCheckButton = document.querySelector("#route-check-button");
-  const drawerCompleteButton = document.querySelector("#drawer-complete-button");
+  const drawerCompleteButton = document.querySelector(
+    "#drawer-complete-button"
+  );
   const completeModal = document.querySelector("#complete-modal");
-  const completeModalLocation = document.querySelector("#complete-modal-location");
-  const completeModalCancel = document.querySelector("#complete-modal-cancel");
-  const completeModalConfirm = document.querySelector("#complete-modal-confirm");
+  const completeModalLocation = document.querySelector(
+    "#complete-modal-location"
+  );
+  const completeModalCancel = document.querySelector(
+    "#complete-modal-cancel"
+  );
+  const completeModalConfirm = document.querySelector(
+    "#complete-modal-confirm"
+  );
   const searchEndButton = document.querySelector("#search-end-button");
   const allCompleteModal = document.querySelector("#all-complete-modal");
-  const allCompleteModalClose = document.querySelector("#all-complete-modal-close");
+  const allCompleteModalClose = document.querySelector(
+    "#all-complete-modal-close"
+  );
   const newSearchButton = document.querySelector("#new-search-button");
-  const allCompleteEndButton = document.querySelector("#all-complete-end-button");
-  const searchEndConfirmModal = document.querySelector("#search-end-confirm-modal");
-  const continueSearchButton = document.querySelector("#continue-search-button");
-  const confirmSearchEndButton = document.querySelector("#confirm-search-end-button");
+  const allCompleteEndButton = document.querySelector(
+    "#all-complete-end-button"
+  );
+  const searchEndConfirmModal = document.querySelector(
+    "#search-end-confirm-modal"
+  );
+  const continueSearchButton = document.querySelector(
+    "#continue-search-button"
+  );
+  const confirmSearchEndButton = document.querySelector(
+    "#confirm-search-end-button"
+  );
+
+  const API_BASE_URL = "http://127.0.0.1:8080";
+
+  let currentSearchSession = null;
 
   const TIME_POINTS = [
     {
@@ -51,12 +83,38 @@
     }
   ];
 
+  const TIME_POINT_VALUES = [
+    "NOW",
+    "AFTER_30M",
+    "AFTER_1H",
+    "AFTER_3H",
+    "AFTER_6H"
+  ];
+
   const DEFAULT_CENTER = {
     lat: 37.5665,
     lng: 126.978
   };
 
   const DEFAULT_ZOOM = 15;
+
+  const PRIORITY_CONFIG = {
+    1: {
+      priority: "high",
+      priorityLabel: "높은 우선도",
+      radius: 180
+    },
+    2: {
+      priority: "medium",
+      priorityLabel: "중간 우선도",
+      radius: 220
+    },
+    3: {
+      priority: "low",
+      priorityLabel: "낮은 우선도",
+      radius: 260
+    }
+  };
 
   let resultMap = null;
   let detailMap = null;
@@ -65,26 +123,22 @@
   let detailPolyline = null;
   let activeDetailLocation = null;
   let pendingCompleteItem = null;
+  let analysisResults = [];
+  let locationDetails = {};
 
   const getSearchLocation = () => {
-    const storedSearchData =
-      sessionStorage.getItem(
-        "goldenStepSearchData"
-      );
+    const storedSearchData = sessionStorage.getItem(
+      "goldenStepSearchData"
+    );
 
     if (!storedSearchData) {
       return DEFAULT_CENTER;
     }
 
     try {
-      const searchData =
-        JSON.parse(storedSearchData);
-
-      const lat =
-        Number(searchData.latitude);
-
-      const lng =
-        Number(searchData.longitude);
+      const searchData = JSON.parse(storedSearchData);
+      const lat = Number(searchData.latitude);
+      const lng = Number(searchData.longitude);
 
       if (
         Number.isFinite(lat) &&
@@ -104,298 +158,257 @@
 
   const SEARCH_LOCATION = getSearchLocation();
 
-  const MOCK_ANALYSIS_RESULTS = [
-    {
-      minutes: 0,
-      areas: [
-        {
-          id: "location-1",
-          priorityId: "priority-1",
-          name: "한강공원 산책로",
-          priority: "high",
-          priorityLabel: "높은 우선도",
-          distance: "약 450m",
-          walkingTime: "약 6분",
-          latOffset: 0.0022,
-          lngOffset: -0.0018,
-          radius: 180
-        },
-        {
-          id: "location-2",
-          priorityId: "priority-2",
-          name: "중앙초등학교 주변",
-          priority: "medium",
-          priorityLabel: "중간 우선도",
-          distance: "약 720m",
-          walkingTime: "약 10분",
-          latOffset: -0.0024,
-          lngOffset: 0.0022,
-          radius: 220
-        },
-        {
-          id: "location-3",
-          priorityId: "priority-3",
-          name: "하늘공원",
-          priority: "low",
-          priorityLabel: "낮은 우선도",
-          distance: "약 980m",
-          walkingTime: "약 14분",
-          latOffset: 0.0006,
-          lngOffset: 0.0044,
-          radius: 260
-        }
-      ]
-    },
-    {
-      minutes: 30,
-      areas: [
-        {
-          id: "location-1",
-          priorityId: "priority-1",
-          name: "한강공원 산책로",
-          address: "서울시 OO구 OO동",
-          priority: "high",
-          priorityLabel: "높은 우선도",
-          distance: "약 650m",
-          walkingTime: "약 9분",
-          latOffset: 0.003,
-          lngOffset: -0.0026,
-          radius: 240
-        },
-        {
-          id: "location-2",
-          priorityId: "priority-2",
-          name: "중앙초등학교 주변",
-          address: "서울시 OO구 OO동",
-          priority: "medium",
-          priorityLabel: "중간 우선도",
-          distance: "약 900m",
-          walkingTime: "약 13분",
-          latOffset: -0.0032,
-          lngOffset: 0.003,
-          radius: 280
-        },
-        {
-          id: "location-3",
-          priorityId: "priority-3",
-          name: "OO공원",
-          address: "서울시 OO구 OO동",
-          priority: "low",
-          priorityLabel: "낮은 우선도",
-          distance: "약 1.2km",
-          walkingTime: "약 17분",
-          latOffset: 0.001,
-          lngOffset: 0.0054,
-          radius: 320
-        }
-      ]
-    },
-    {
-      minutes: 60,
-      areas: [
-        {
-          id: "location-1",
-          priorityId: "priority-1",
-          name: "한강공원 산책로",
-          address: "서울시 OO구 OO동",
-          priority: "high",
-          priorityLabel: "높은 우선도",
-          distance: "약 850m",
-          walkingTime: "약 12분",
-          latOffset: 0.0038,
-          lngOffset: -0.0034,
-          radius: 300
-        },
-        {
-          id: "location-2",
-          priorityId: "priority-2",
-          name: "중앙초등학교 주변",
-          address: "서울시 OO구 OO동",
-          priority: "medium",
-          priorityLabel: "중간 우선도",
-          distance: "약 1.1km",
-          walkingTime: "약 16분",
-          latOffset: -0.004,
-          lngOffset: 0.0038,
-          radius: 350
-        },
-        {
-          id: "location-3",
-          priorityId: "priority-3",
-          name: "OO공원",
-          address: "서울시 OO구 OO동",
-          priority: "low",
-          priorityLabel: "낮은 우선도",
-          distance: "약 1.5km",
-          walkingTime: "약 21분",
-          latOffset: 0.0014,
-          lngOffset: 0.0064,
-          radius: 400
-        }
-      ]
-    },
-    {
-      minutes: 180,
-      areas: [
-        {
-          id: "location-1",
-          priorityId: "priority-1",
-          name: "한강공원 산책로",
-          address: "서울시 OO구 OO동",
-          priority: "high",
-          priorityLabel: "높은 우선도",
-          distance: "약 1.5km",
-          walkingTime: "약 22분",
-          latOffset: 0.0058,
-          lngOffset: -0.0054,
-          radius: 460
-        },
-        {
-          id: "location-2",
-          priorityId: "priority-2",
-          name: "중앙초등학교 주변",
-          address: "서울시 OO구 OO동",
-          priority: "medium",
-          priorityLabel: "중간 우선도",
-          distance: "약 1.9km",
-          walkingTime: "약 27분",
-          latOffset: -0.006,
-          lngOffset: 0.0058,
-          radius: 520
-        },
-        {
-          id: "location-3",
-          priorityId: "priority-3",
-          name: "OO공원",
-          address: "서울시 OO구 OO동",
-          priority: "low",
-          priorityLabel: "낮은 우선도",
-          distance: "약 2.4km",
-          walkingTime: "약 34분",
-          latOffset: 0.0024,
-          lngOffset: 0.0086,
-          radius: 590
-        }
-      ]
-    },
-    {
-      minutes: 360,
-      areas: [
-        {
-          id: "location-1",
-          priorityId: "priority-1",
-          name: "한강공원 산책로",
-          address: "서울시 OO구 OO동",
-          priority: "high",
-          priorityLabel: "높은 우선도",
-          distance: "약 2.4km",
-          walkingTime: "약 34분",
-          latOffset: 0.0082,
-          lngOffset: -0.0076,
-          radius: 650
-        },
-        {
-          id: "location-2",
-          priorityId: "priority-2",
-          name: "중앙초등학교 주변",
-          address: "서울시 OO구 OO동",
-          priority: "medium",
-          priorityLabel: "중간 우선도",
-          distance: "약 3.0km",
-          walkingTime: "약 43분",
-          latOffset: -0.0086,
-          lngOffset: 0.008,
-          radius: 720
-        },
-        {
-          id: "location-3",
-          priorityId: "priority-3",
-          name: "OO공원",
-          address: "서울시 OO구 OO동",
-          priority: "low",
-          priorityLabel: "낮은 우선도",
-          distance: "약 3.8km",
-          walkingTime: "약 54분",
-          latOffset: 0.0038,
-          lngOffset: 0.0118,
-          radius: 800
-        }
-      ]
-    }
-  ];
-
-  const LOCATION_DETAILS = {
-    "location-1": {
-      priorityId: "priority-1",
-      priority: "high",
-      priorityLabel: "높은 우선도",
-      name: "한강공원 산책로",
-      distance: "약 450m",
-      walkingTime: "약 6분",
-      latOffset: 0.0022,
-      lngOffset: -0.0018
-    },
-    "location-2": {
-      priorityId: "priority-2",
-      priority: "medium",
-      priorityLabel: "중간 우선도",
-      name: "중앙초등학교 주변",
-      distance: "약 720m",
-      walkingTime: "약 10분",
-      latOffset: -0.0024,
-      lngOffset: 0.0022
-    },
-    "location-3": {
-      priorityId: "priority-3",
-      priority: "low",
-      priorityLabel: "낮은 우선도",
-      name: "하늘공원",
-      distance: "약 980m",
-      walkingTime: "약 14분",
-      latOffset: 0.0006,
-      lngOffset: 0.0044
-    }
-  };
-
-  const getCompletedPriorityIds = () => {
-    const storedValue = sessionStorage.getItem(
-      "goldenStepCompletedPriorities"
+  const getCurrentSearchLocation = () => {
+    const lat = Number(
+      currentSearchSession?.lastLat
     );
 
-    if (!storedValue) {
-      return [];
+    const lng = Number(
+      currentSearchSession?.lastLng
+    );
+
+    if (
+      Number.isFinite(lat) &&
+      Number.isFinite(lng)
+    ) {
+      return {
+        lat,
+        lng
+      };
     }
+
+    return SEARCH_LOCATION;
+  };
+
+  const getRunId = () => {
+    const storedRunId =
+      sessionStorage.getItem(
+        "goldenStepRunId"
+      );
+
+    if (!storedRunId) {
+      return null;
+    }
+
+    const runId =
+      Number(storedRunId);
+
+    if (!Number.isFinite(runId)) {
+      return null;
+    }
+
+    return runId;
+  };
+
+  const getPriorityConfig = (priorityRank) => {
+    const rank = Number(priorityRank);
+
+    return (
+      PRIORITY_CONFIG[rank] ||
+      PRIORITY_CONFIG[3]
+    );
+  };
+
+  const createLocationFromPlace = (place) => {
+    const config = getPriorityConfig(
+      place.priorityRank
+    );
+
+    const lat = Number(place.lat);
+    const lng = Number(place.lng);
+
+    return {
+      id: `place-${place.placeId}`,
+      priorityId: `place-${place.placeId}`,
+      placeId: Number(place.placeId),
+      poiId: place.poiId || "",
+      priorityRank: Number(place.priorityRank),
+      priority: config.priority,
+      priorityLabel: config.priorityLabel,
+      name: place.name || "장소 정보 없음",
+      address: place.address || "",
+      lat,
+      lng,
+      radius: config.radius,
+      score: place.score ?? null,
+      checked: Boolean(place.checked),
+      checkedAt: place.checkedAt || null,
+      distance: "경로 확인 필요",
+      walkingTime: "경로 확인 필요"
+    };
+  };
+
+  const convertTimeResult = (
+    result,
+    selectedIndex
+  ) => {
+    const places = Array.isArray(result?.places)
+      ? result.places
+      : [];
+
+    const areas = places
+      .map(createLocationFromPlace)
+      .filter(
+        (location) =>
+          Number.isFinite(location.lat) &&
+          Number.isFinite(location.lng)
+      );
+
+    areas.forEach((location) => {
+      locationDetails[location.id] =
+        location;
+    });
+
+    return {
+      minutes:
+        TIME_POINTS[selectedIndex]?.minutes ??
+        0,
+      timePoint:
+        TIME_POINT_VALUES[selectedIndex],
+      runId: result?.runId ?? null,
+      resultId: result?.resultId ?? null,
+      targetAt: result?.targetAt ?? null,
+      boundaryZone:
+        result?.boundaryZone ?? null,
+      reliabilityStatus:
+        result?.reliabilityStatus ?? null,
+      areas
+    };
+  };
+
+  const createTimeResult = async (
+    runId,
+    timePoint,
+    selectedIndex
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/api/search/analysis/${runId}/results/${timePoint}`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
+        }
+      }
+    );
+
+    let responseData = null;
 
     try {
-      const parsedValue = JSON.parse(storedValue);
-
-      return Array.isArray(parsedValue)
-        ? parsedValue
-        : [];
+      responseData =
+        await response.json();
     } catch {
-      return [];
+      responseData = null;
     }
+
+    if (!response.ok) {
+      throw new Error(
+        responseData?.message ||
+        "시간점 분석 결과를 생성하지 못했습니다."
+      );
+    }
+
+    const convertedResult =
+      convertTimeResult(
+        responseData,
+        selectedIndex
+      );
+
+    analysisResults[selectedIndex] =
+      convertedResult;
+
+    return convertedResult;
   };
 
-  const saveCompletedPriorityIds = () => {
-    if (!completedPriorityList) {
-      return;
+  const fetchTimeResult = async (
+    selectedIndex
+  ) => {
+    const runId = getRunId();
+    const timePoint =
+      TIME_POINT_VALUES[selectedIndex];
+
+    if (!runId || !timePoint) {
+      throw new Error(
+        "분석 실행 정보를 찾을 수 없습니다."
+      );
     }
 
-    const completedItems = Array.from(
-      completedPriorityList.querySelectorAll(
-        ".priority-item"
-      )
+    const response = await fetch(
+      `${API_BASE_URL}/api/search/analysis/${runId}/results/${timePoint}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
+        }
+      }
     );
 
-    const completedIds = completedItems
-      .map((item) => item.dataset.priorityId)
-      .filter(Boolean);
+    let responseData = null;
 
-    sessionStorage.setItem(
-      "goldenStepCompletedPriorities",
-      JSON.stringify(completedIds)
-    );
+    try {
+      responseData =
+        await response.json();
+    } catch {
+      responseData = null;
+    }
+
+    if (response.status === 404) {
+      return createTimeResult(
+        runId,
+        timePoint,
+        selectedIndex
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        responseData?.message ||
+        "분석 결과를 불러오지 못했습니다."
+      );
+    }
+
+    const convertedResult =
+      convertTimeResult(
+        responseData,
+        selectedIndex
+      );
+
+    analysisResults[selectedIndex] =
+      convertedResult;
+
+    return convertedResult;
+  };
+
+  const fetchAllTimeResults = async () => {
+    locationDetails = {};
+
+    const requests =
+      TIME_POINT_VALUES.map(
+        async (timePoint, index) => {
+          try {
+            return await fetchTimeResult(
+              index
+            );
+          } catch (error) {
+            console.error(
+              `${timePoint} result error:`,
+              error
+            );
+
+            return {
+              minutes:
+                TIME_POINTS[index]
+                  ?.minutes ?? 0,
+              timePoint,
+              areas: []
+            };
+          }
+        }
+      );
+
+    analysisResults =
+      await Promise.all(requests);
   };
 
   const getNaverLatLng = (lat, lng) => {
@@ -405,7 +418,9 @@
     );
   };
 
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = (
+    priority
+  ) => {
     if (priority === "high") {
       return "#EF4444";
     }
@@ -425,10 +440,12 @@
     resultCircles = [];
   };
 
-  const renderPriorityAreas = (selectedIndex) => {
+  const renderPriorityAreas = (
+    selectedIndex
+  ) => {
     if (
       !resultMap ||
-      !MOCK_ANALYSIS_RESULTS[selectedIndex]
+      !analysisResults[selectedIndex]
     ) {
       return;
     }
@@ -436,33 +453,17 @@
     clearResultPriorityAreas();
 
     const analysis =
-      MOCK_ANALYSIS_RESULTS[selectedIndex];
-
-    const completedPriorityIds =
-      getCompletedPriorityIds();
+      analysisResults[selectedIndex];
 
     analysis.areas.forEach((area) => {
-      if (
-        completedPriorityIds.includes(
-          area.priorityId
-        )
-      ) {
+      if (area.checked) {
         return;
       }
 
-      const lat =
-        SEARCH_LOCATION.lat +
-        area.latOffset;
-
-      const lng =
-        SEARCH_LOCATION.lng +
-        area.lngOffset;
-
-      const position =
-        getNaverLatLng(
-          lat,
-          lng
-        );
+      const position = getNaverLatLng(
+        area.lat,
+        area.lng
+      );
 
       const circle =
         new naver.maps.Circle({
@@ -470,13 +471,15 @@
           center: position,
           radius: area.radius,
           strokeWeight: 1,
-          strokeColor: getPriorityColor(
-            area.priority
-          ),
+          strokeColor:
+            getPriorityColor(
+              area.priority
+            ),
           strokeOpacity: 0.5,
-          fillColor: getPriorityColor(
-            area.priority
-          ),
+          fillColor:
+            getPriorityColor(
+              area.priority
+            ),
           fillOpacity: 0.22
         });
 
@@ -498,13 +501,16 @@
       return;
     }
 
+    const searchLocation =
+      getCurrentSearchLocation();
+
     resultMap =
       new naver.maps.Map(
         mapElement,
         {
           center: getNaverLatLng(
-            SEARCH_LOCATION.lat,
-            SEARCH_LOCATION.lng
+            searchLocation.lat,
+            searchLocation.lng
           ),
           zoom: DEFAULT_ZOOM,
           zoomControl: true,
@@ -518,17 +524,17 @@
     new naver.maps.Marker({
       map: resultMap,
       position: getNaverLatLng(
-        SEARCH_LOCATION.lat,
-        SEARCH_LOCATION.lng
+        searchLocation.lat,
+        searchLocation.lng
       ),
       icon: {
         content: `
-      <div class="board-location-marker">
-        <div class="board-location-marker-pin">
-          <span></span>
-        </div>
-      </div>
-    `,
+          <div class="board-location-marker">
+            <div class="board-location-marker-pin">
+              <span></span>
+            </div>
+          </div>
+        `,
         anchor:
           new naver.maps.Point(
             20,
@@ -536,49 +542,6 @@
           )
       }
     });
-
-  };
-
-  const updateTime = () => {
-    if (
-      !timeRange ||
-      !selectedTime
-    ) {
-      return;
-    }
-
-    const selectedIndex =
-      Number(timeRange.value);
-
-    const selectedPoint =
-      TIME_POINTS[selectedIndex];
-
-    if (!selectedPoint) {
-      return;
-    }
-
-    selectedTime.textContent =
-      selectedPoint.label;
-
-    const maxValue =
-      Number(timeRange.max);
-
-    const progress =
-      maxValue > 0
-        ? (
-          selectedIndex /
-          maxValue
-        ) * 100
-        : 0;
-
-    timeRange.style.setProperty(
-      "--range-progress",
-      `${progress}%`
-    );
-
-    renderPriorityAreas(
-      selectedIndex
-    );
   };
 
   const clearDetailMapObjects = () => {
@@ -610,14 +573,17 @@
       return;
     }
 
+    const searchLocation =
+      getCurrentSearchLocation();
+
     if (!detailMap) {
       detailMap =
         new naver.maps.Map(
           detailMapElement,
           {
             center: getNaverLatLng(
-              SEARCH_LOCATION.lat,
-              SEARCH_LOCATION.lng
+              searchLocation.lat,
+              searchLocation.lng
             ),
             zoom: 15,
             zoomControl: false
@@ -626,18 +592,18 @@
     }
   };
 
-  const getDestinationPosition = (location) => {
+  const getDestinationPosition = (
+    location
+  ) => {
     return {
-      lat:
-        SEARCH_LOCATION.lat +
-        location.latOffset,
-      lng:
-        SEARCH_LOCATION.lng +
-        location.lngOffset
+      lat: Number(location.lat),
+      lng: Number(location.lng)
     };
   };
 
-  const createStartMarker = (position) => {
+  const createStartMarker = (
+    position
+  ) => {
     return new naver.maps.Marker({
       map: detailMap,
       position,
@@ -656,7 +622,9 @@
     });
   };
 
-  const createEndMarker = (position) => {
+  const createEndMarker = (
+    position
+  ) => {
     return new naver.maps.Marker({
       map: detailMap,
       position,
@@ -675,7 +643,9 @@
     });
   };
 
-  const renderDetailPoints = (location) => {
+  const renderDetailPoints = (
+    location
+  ) => {
     if (!location) {
       return;
     }
@@ -691,10 +661,13 @@
     const destination =
       getDestinationPosition(location);
 
+    const searchLocation =
+      getCurrentSearchLocation();
+
     const startPosition =
       getNaverLatLng(
-        SEARCH_LOCATION.lat,
-        SEARCH_LOCATION.lng
+        searchLocation.lat,
+        searchLocation.lng
       );
 
     const endPosition =
@@ -749,10 +722,14 @@
       const kilometers =
         distance / 1000;
 
-      return `약 ${kilometers.toFixed(1)}km`;
+      return `약 ${kilometers.toFixed(
+        1
+      )}km`;
     }
 
-    return `약 ${Math.round(distance)}m`;
+    return `약 ${Math.round(
+      distance
+    )}m`;
   };
 
   const formatWalkingTime = (
@@ -761,17 +738,18 @@
     const totalSeconds =
       Number(seconds);
 
-    if (!Number.isFinite(totalSeconds)) {
+    if (
+      !Number.isFinite(totalSeconds)
+    ) {
       return "시간 정보 없음";
     }
 
-    const minutes =
-      Math.max(
-        1,
-        Math.ceil(
-          totalSeconds / 60
-        )
-      );
+    const minutes = Math.max(
+      1,
+      Math.ceil(
+        totalSeconds / 60
+      )
+    );
 
     return `약 ${minutes}분`;
   };
@@ -802,8 +780,12 @@
         );
 
       if (
-        Number.isFinite(totalDistance) &&
-        Number.isFinite(totalTime)
+        Number.isFinite(
+          totalDistance
+        ) &&
+        Number.isFinite(
+          totalTime
+        )
       ) {
         return {
           totalDistance,
@@ -820,51 +802,51 @@
   ) => {
     const routePath = [];
 
-    features.forEach(
-      (feature) => {
-        if (
-          !feature.geometry ||
-          feature.geometry.type !==
-          "LineString" ||
-          !Array.isArray(
-            feature.geometry.coordinates
-          )
-        ) {
-          return;
-        }
-
-        feature.geometry.coordinates.forEach(
-          (coordinate) => {
-            if (
-              !Array.isArray(coordinate) ||
-              coordinate.length < 2
-            ) {
-              return;
-            }
-
-            const lng =
-              Number(coordinate[0]);
-
-            const lat =
-              Number(coordinate[1]);
-
-            if (
-              !Number.isFinite(lat) ||
-              !Number.isFinite(lng)
-            ) {
-              return;
-            }
-
-            routePath.push(
-              getNaverLatLng(
-                lat,
-                lng
-              )
-            );
-          }
-        );
+    features.forEach((feature) => {
+      if (
+        !feature.geometry ||
+        feature.geometry.type !==
+        "LineString" ||
+        !Array.isArray(
+          feature.geometry.coordinates
+        )
+      ) {
+        return;
       }
-    );
+
+      feature.geometry.coordinates.forEach(
+        (coordinate) => {
+          if (
+            !Array.isArray(
+              coordinate
+            ) ||
+            coordinate.length < 2
+          ) {
+            return;
+          }
+
+          const lng =
+            Number(coordinate[0]);
+
+          const lat =
+            Number(coordinate[1]);
+
+          if (
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lng)
+          ) {
+            return;
+          }
+
+          routePath.push(
+            getNaverLatLng(
+              lat,
+              lng
+            )
+          );
+        }
+      );
+    });
 
     return routePath;
   };
@@ -888,10 +870,13 @@
     const destination =
       getDestinationPosition(location);
 
+    const searchLocation =
+      getCurrentSearchLocation();
+
     const startPosition =
       getNaverLatLng(
-        SEARCH_LOCATION.lat,
-        SEARCH_LOCATION.lng
+        searchLocation.lat,
+        searchLocation.lng
       );
 
     const endPosition =
@@ -972,148 +957,155 @@
     `;
   };
 
-  const requestPedestrianRoute = async (
-    location
-  ) => {
-    if (!location) {
-      return;
-    }
-
-    const appKey =
-      window.TMAP_CONFIG &&
-      window.TMAP_CONFIG.appKey;
-
-    if (!appKey) {
-      alert(
-        "TMAP AppKey를 확인해주세요."
-      );
-      return;
-    }
-
-    const destination =
-      getDestinationPosition(location);
-
-    setRouteButtonLoading(true);
-
-    try {
-      const response =
-        await fetch(
-          "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
-          {
-            method: "POST",
-            headers: {
-              Accept:
-                "application/json",
-              "Content-Type":
-                "application/json",
-              appKey
-            },
-            body: JSON.stringify({
-              startX: String(
-                SEARCH_LOCATION.lng
-              ),
-              startY: String(
-                SEARCH_LOCATION.lat
-              ),
-              endX: String(
-                destination.lng
-              ),
-              endY: String(
-                destination.lat
-              ),
-              reqCoordType:
-                "WGS84GEO",
-              resCoordType:
-                "WGS84GEO",
-              startName:
-                "마지막 확인 위치",
-              endName:
-                location.name,
-              searchOption:
-                "0"
-            })
-          }
-        );
-
-      if (!response.ok) {
-        const errorText =
-          await response.text();
-
-        throw new Error(
-          `TMAP API ${response.status}: ${errorText}`
-        );
+  const requestPedestrianRoute =
+    async (location) => {
+      if (!location) {
+        return;
       }
 
-      const data =
-        await response.json();
+      const appKey =
+        window.TMAP_CONFIG &&
+        window.TMAP_CONFIG.appKey;
 
-      if (
-        !data ||
-        !Array.isArray(data.features) ||
-        data.features.length === 0
-      ) {
-        throw new Error(
-          "TMAP 경로 데이터가 없습니다."
+      if (!appKey) {
+        alert(
+          "TMAP AppKey를 확인해주세요."
         );
+        return;
       }
 
-      const summary =
-        getRouteSummary(
-          data.features
+      const destination =
+        getDestinationPosition(
+          location
         );
 
-      if (!summary) {
-        throw new Error(
-          "TMAP 거리 및 시간 정보를 찾을 수 없습니다."
-        );
-      }
+      const searchLocation =
+        getCurrentSearchLocation();
 
-      const routePath =
-        getRoutePath(
-          data.features
-        );
+      setRouteButtonLoading(true);
 
-      if (routePath.length < 2) {
-        throw new Error(
-          "TMAP 보행 경로 좌표를 찾을 수 없습니다."
-        );
-      }
-
-      if (detailDistance) {
-        detailDistance.textContent =
-          formatWalkingDistance(
-            summary.totalDistance
+      try {
+        const response =
+          await fetch(
+            "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
+            {
+              method: "POST",
+              headers: {
+                Accept:
+                  "application/json",
+                "Content-Type":
+                  "application/json",
+                appKey
+              },
+              body: JSON.stringify({
+                startX: String(
+                  searchLocation.lng
+                ),
+                startY: String(
+                  searchLocation.lat
+                ),
+                endX: String(
+                  destination.lng
+                ),
+                endY: String(
+                  destination.lat
+                ),
+                reqCoordType:
+                  "WGS84GEO",
+                resCoordType:
+                  "WGS84GEO",
+                startName:
+                  "마지막 확인 위치",
+                endName:
+                  location.name,
+                searchOption: "0"
+              })
+            }
           );
-      }
 
-      if (detailWalkingTime) {
-        detailWalkingTime.textContent =
-          formatWalkingTime(
-            summary.totalTime
+        if (!response.ok) {
+          const errorText =
+            await response.text();
+
+          throw new Error(
+            `TMAP API ${response.status}: ${errorText}`
           );
+        }
+
+        const data =
+          await response.json();
+
+        if (
+          !data ||
+          !Array.isArray(
+            data.features
+          ) ||
+          data.features.length === 0
+        ) {
+          throw new Error(
+            "TMAP 경로 데이터가 없습니다."
+          );
+        }
+
+        const summary =
+          getRouteSummary(
+            data.features
+          );
+
+        if (!summary) {
+          throw new Error(
+            "TMAP 거리 및 시간 정보를 찾을 수 없습니다."
+          );
+        }
+
+        const routePath =
+          getRoutePath(
+            data.features
+          );
+
+        if (
+          routePath.length < 2
+        ) {
+          throw new Error(
+            "TMAP 보행 경로 좌표를 찾을 수 없습니다."
+          );
+        }
+
+        if (detailDistance) {
+          detailDistance.textContent =
+            formatWalkingDistance(
+              summary.totalDistance
+            );
+        }
+
+        if (detailWalkingTime) {
+          detailWalkingTime.textContent =
+            formatWalkingTime(
+              summary.totalTime
+            );
+        }
+
+        renderPedestrianRoute(
+          location,
+          routePath
+        );
+      } catch (error) {
+        console.error(
+          "TMAP pedestrian route error:",
+          error
+        );
+
+        alert(
+          "보행 경로를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+        );
+
+        renderDetailPoints(
+          location
+        );
+      } finally {
+        setRouteButtonLoading(false);
       }
-
-      renderPedestrianRoute(
-        location,
-        routePath
-      );
-    } catch (error) {
-      console.error(
-        "TMAP pedestrian route error:",
-        error
-      );
-
-      alert(
-        "보행 경로를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
-      );
-
-      renderDetailPoints(
-        location
-      );
-    } finally {
-      setRouteButtonLoading(false);
-    }
-  };
+    };
 
   const updateDetailBadge = (
     location
@@ -1140,7 +1132,6 @@
       detailPriorityBadge.classList.add(
         "is-high"
       );
-
       return;
     }
 
@@ -1150,7 +1141,6 @@
       detailPriorityBadge.classList.add(
         "is-medium"
       );
-
       return;
     }
 
@@ -1173,9 +1163,7 @@
     activeDetailLocation =
       location;
 
-    updateDetailBadge(
-      location
-    );
+    updateDetailBadge(location);
 
     if (detailPlaceName) {
       detailPlaceName.textContent =
@@ -1208,14 +1196,11 @@
     document.body.style.overflow =
       "hidden";
 
-    window.setTimeout(
-      () => {
-        renderDetailPoints(
-          location
-        );
-      },
-      250
-    );
+    window.setTimeout(() => {
+      renderDetailPoints(
+        location
+      );
+    }, 250);
   };
 
   const closeDetailDrawer = () => {
@@ -1265,7 +1250,7 @@
       button.dataset.locationId;
 
     const location =
-      LOCATION_DETAILS[
+      locationDetails[
       locationId
       ];
 
@@ -1273,20 +1258,21 @@
       return;
     }
 
-    openDetailDrawer(
-      location
-    );
+    openDetailDrawer(location);
   };
 
-  const handleRouteCheck = async () => {
-    if (!activeDetailLocation) {
-      return;
-    }
+  const handleRouteCheck =
+    async () => {
+      if (
+        !activeDetailLocation
+      ) {
+        return;
+      }
 
-    await requestPedestrianRoute(
-      activeDetailLocation
-    );
-  };
+      await requestPedestrianRoute(
+        activeDetailLocation
+      );
+    };
 
   const updatePriorityRanks = () => {
     if (!priorityList) {
@@ -1347,8 +1333,7 @@
   };
 
   const moveItemToCompleted = (
-    item,
-    shouldSave = true
+    item
   ) => {
     if (
       !item ||
@@ -1390,10 +1375,237 @@
       false;
 
     updatePriorityRanks();
+  };
 
-    if (shouldSave) {
-      saveCompletedPriorityIds();
+  const createPriorityItem = (
+    location,
+    index
+  ) => {
+    const item =
+      document.createElement(
+        "li"
+      );
+
+    item.className =
+      "priority-item";
+
+    item.dataset.priorityId =
+      location.priorityId;
+
+    item.dataset.placeId =
+      String(location.placeId);
+
+    const rank =
+      document.createElement(
+        "span"
+      );
+
+    rank.className =
+      "priority-rank";
+
+    rank.textContent =
+      String(index + 1);
+
+    const info =
+      document.createElement(
+        "div"
+      );
+
+    info.className =
+      "priority-info";
+
+    const name =
+      document.createElement(
+        "strong"
+      );
+
+    name.textContent =
+      location.name;
+
+    const address =
+      document.createElement(
+        "span"
+      );
+
+    address.textContent =
+      location.address ||
+      "주소 정보 없음";
+
+    info.appendChild(name);
+    info.appendChild(address);
+
+    const actions =
+      document.createElement(
+        "div"
+      );
+
+    actions.className =
+      "priority-actions";
+
+    const detailButton =
+      document.createElement(
+        "button"
+      );
+
+    detailButton.type = "button";
+
+    detailButton.className =
+      "detail-button";
+
+    detailButton.dataset.locationId =
+      location.id;
+
+    detailButton.textContent =
+      "상세보기";
+
+    detailButton.addEventListener(
+      "click",
+      handleDetailClick
+    );
+
+    actions.appendChild(
+      detailButton
+    );
+
+    item.appendChild(rank);
+    item.appendChild(info);
+    item.appendChild(actions);
+
+    return item;
+  };
+
+  const renderPriorityList = (
+    selectedIndex
+  ) => {
+    if (!priorityList) {
+      return;
     }
+
+    const analysis =
+      analysisResults[
+      selectedIndex
+      ];
+
+    if (!analysis) {
+      return;
+    }
+
+    priorityList.replaceChildren();
+
+    if (completedPriorityList) {
+      completedPriorityList.replaceChildren();
+    }
+
+    if (completedPrioritySection) {
+      completedPrioritySection.hidden =
+        true;
+    }
+
+    [...analysis.areas]
+      .sort(
+        (a, b) =>
+          a.priorityRank -
+          b.priorityRank
+      )
+      .forEach(
+        (location, index) => {
+          const item =
+            createPriorityItem(
+              location,
+              index
+            );
+
+          if (
+            location.checked &&
+            completedPriorityList &&
+            completedPrioritySection
+          ) {
+            moveItemToCompleted(
+              item
+            );
+            return;
+          }
+
+          priorityList.appendChild(
+            item
+          );
+        }
+      );
+
+    if (
+      completedPriorityList &&
+      completedPriorityList
+        .children.length > 0
+    ) {
+      completedPrioritySection.hidden =
+        false;
+    }
+
+    updatePriorityRanks();
+  };
+
+  const updateTime = async () => {
+    if (
+      !timeRange ||
+      !selectedTime
+    ) {
+      return;
+    }
+
+    const selectedIndex =
+      Number(timeRange.value);
+
+    const selectedPoint =
+      TIME_POINTS[selectedIndex];
+
+    if (!selectedPoint) {
+      return;
+    }
+
+    selectedTime.textContent =
+      selectedPoint.label;
+
+    const maxValue =
+      Number(timeRange.max);
+
+    const progress =
+      maxValue > 0
+        ? (
+          selectedIndex /
+          maxValue
+        ) * 100
+        : 0;
+
+    timeRange.style.setProperty(
+      "--range-progress",
+      `${progress}%`
+    );
+
+    if (
+      !analysisResults[
+      selectedIndex
+      ]
+    ) {
+      try {
+        await fetchTimeResult(
+          selectedIndex
+        );
+      } catch (error) {
+        console.error(
+          "Time result error:",
+          error
+        );
+        return;
+      }
+    }
+
+    renderPriorityList(
+      selectedIndex
+    );
+
+    renderPriorityAreas(
+      selectedIndex
+    );
   };
 
   const openCompleteModal = (
@@ -1432,7 +1644,6 @@
     }
 
     completeModal.hidden = true;
-
     pendingCompleteItem = null;
 
     if (
@@ -1495,32 +1706,38 @@
     syncBodyOverflow();
   };
 
-  const openSearchEndConfirmModal = () => {
-    if (allCompleteModal) {
-      allCompleteModal.hidden =
+  const openSearchEndConfirmModal =
+    () => {
+      if (allCompleteModal) {
+        allCompleteModal.hidden =
+          true;
+      }
+
+      if (
+        !searchEndConfirmModal
+      ) {
+        return;
+      }
+
+      searchEndConfirmModal.hidden =
+        false;
+
+      syncBodyOverflow();
+    };
+
+  const closeSearchEndConfirmModal =
+    () => {
+      if (
+        !searchEndConfirmModal
+      ) {
+        return;
+      }
+
+      searchEndConfirmModal.hidden =
         true;
-    }
 
-    if (!searchEndConfirmModal) {
-      return;
-    }
-
-    searchEndConfirmModal.hidden =
-      false;
-
-    syncBodyOverflow();
-  };
-
-  const closeSearchEndConfirmModal = () => {
-    if (!searchEndConfirmModal) {
-      return;
-    }
-
-    searchEndConfirmModal.hidden =
-      true;
-
-    syncBodyOverflow();
-  };
+      syncBodyOverflow();
+    };
 
   const clearCurrentSearchData = () => {
     sessionStorage.removeItem(
@@ -1539,114 +1756,198 @@
       "./search-form.html";
   };
 
-  const handleSearchEndConfirm = () => {
-    clearCurrentSearchData();
+  const handleSearchEndConfirm =
+    () => {
+      clearCurrentSearchData();
 
-    window.location.href =
-      "./index.html";
-  };
+      window.location.href =
+        "./index.html";
+    };
 
-  const handleDrawerCompleteClick = () => {
-    if (
-      !activeDetailLocation ||
-      !priorityList
-    ) {
-      return;
-    }
+  const handleDrawerCompleteClick =
+    () => {
+      if (
+        !activeDetailLocation ||
+        !priorityList
+      ) {
+        return;
+      }
 
-    const priorityId =
-      activeDetailLocation.priorityId;
+      const priorityId =
+        activeDetailLocation.priorityId;
 
-    if (!priorityId) {
-      return;
-    }
+      if (!priorityId) {
+        return;
+      }
 
-    const targetItem =
-      priorityList.querySelector(
-        `[data-priority-id="${priorityId}"]`
+      const targetItem =
+        priorityList.querySelector(
+          `[data-priority-id="${priorityId}"]`
+        );
+
+      if (!targetItem) {
+        return;
+      }
+
+      openCompleteModal(
+        targetItem
       );
+    };
 
-    if (!targetItem) {
-      return;
-    }
-
-    openCompleteModal(
-      targetItem
-    );
-  };
-
-  const handleCompleteConfirm = () => {
-    if (!pendingCompleteItem) {
-      return;
-    }
-
-    const completedItem =
-      pendingCompleteItem;
-
-    if (completeModal) {
-      completeModal.hidden =
-        true;
-    }
-
-    pendingCompleteItem =
-      null;
-
-    moveItemToCompleted(
-      completedItem
-    );
-
-    const selectedIndex =
-      timeRange
-        ? Number(timeRange.value)
-        : 0;
-
-    renderPriorityAreas(
-      selectedIndex
-    );
-
-    closeDetailDrawer();
-
-    document.body.style.overflow =
-      "";
-
-    const completedCount =
-      completedPriorityList
-        ? completedPriorityList.querySelectorAll(
-          ".priority-item"
-        ).length
-        : getCompletedPriorityIds().length;
-
-    if (completedCount >= 3) {
-      openAllCompleteModal();
-    }
-  };
-
-  const restoreCompletedPriorities = () => {
-    if (!priorityList) {
-      return;
-    }
-
-    const completedIds =
-      getCompletedPriorityIds();
-
-    completedIds.forEach(
-      (id) => {
-        const item =
-          priorityList.querySelector(
-            `[data-priority-id="${id}"]`
-          );
-
-        if (item) {
-          moveItemToCompleted(
-            item,
-            false
-          );
+  const checkPlace = async (
+    placeId
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/api/search/places/${placeId}/check`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
         }
       }
     );
 
-    updatePriorityRanks();
+    let responseData = null;
+
+    try {
+      responseData =
+        await response.json();
+    } catch {
+      responseData = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        responseData?.message ||
+        "추천 장소 확인 완료 처리에 실패했습니다."
+      );
+    }
+
+    return responseData;
   };
+
+  const handleCompleteConfirm =
+    async () => {
+      if (
+        !pendingCompleteItem
+      ) {
+        return;
+      }
+
+      const completedItem =
+        pendingCompleteItem;
+
+      const placeId = Number(
+        completedItem.dataset.placeId
+      );
+
+      if (
+        !Number.isFinite(placeId)
+      ) {
+        alert(
+          "장소 정보를 확인할 수 없습니다."
+        );
+        return;
+      }
+
+      if (completeModalConfirm) {
+        completeModalConfirm.disabled =
+          true;
+      }
+
+      try {
+        const checkResult =
+          await checkPlace(
+            placeId
+          );
+
+        const selectedIndex =
+          timeRange
+            ? Number(
+              timeRange.value
+            )
+            : 0;
+
+        const analysis =
+          analysisResults[
+          selectedIndex
+          ];
+
+        const location =
+          analysis?.areas.find(
+            (area) =>
+              area.placeId ===
+              placeId
+          );
+
+        if (location) {
+          location.checked =
+            checkResult?.checked ??
+            true;
+
+          location.checkedAt =
+            checkResult?.checkedAt ??
+            new Date().toISOString();
+        }
+
+        if (completeModal) {
+          completeModal.hidden =
+            true;
+        }
+
+        pendingCompleteItem =
+          null;
+
+        moveItemToCompleted(
+          completedItem
+        );
+
+        renderPriorityAreas(
+          selectedIndex
+        );
+
+        closeDetailDrawer();
+
+        document.body.style.overflow =
+          "";
+
+        const completedCount =
+          analysis
+            ? analysis.areas.filter(
+              (area) =>
+                area.checked
+            ).length
+            : 0;
+
+        if (
+          analysis &&
+          analysis.areas.length >
+          0 &&
+          completedCount >=
+          analysis.areas.length
+        ) {
+          openAllCompleteModal();
+        }
+      } catch (error) {
+        console.error(
+          "Place check error:",
+          error
+        );
+
+        alert(
+          error.message ||
+          "탐색 완료 처리에 실패했습니다."
+        );
+      } finally {
+        if (
+          completeModalConfirm
+        ) {
+          completeModalConfirm.disabled =
+            false;
+        }
+      }
+    };
 
   const handleTimeInput = () => {
     updateTime();
@@ -1863,7 +2164,83 @@
     );
   }
 
-  restoreCompletedPriorities();
-  initializeMap();
-  updateTime();
+  const fetchCurrentSearchSession =
+    async () => {
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/search/current`,
+            {
+              method: "GET",
+              credentials: "include"
+            }
+          );
+
+        let responseData = null;
+
+        try {
+          responseData =
+            await response.json();
+        } catch {
+          responseData = null;
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            responseData?.message ||
+            "현재 탐색 정보를 불러오지 못했습니다."
+          );
+        }
+
+        currentSearchSession =
+          responseData;
+
+        console.log(
+          "Current search session:",
+          currentSearchSession
+        );
+
+        return currentSearchSession;
+      } catch (error) {
+        console.error(
+          "Current search session API error:",
+          error
+        );
+
+        return null;
+      }
+    };
+
+  const initializeSearchResult =
+    async () => {
+      initializeMap();
+
+      await fetchCurrentSearchSession();
+
+      const runId = getRunId();
+
+      if (!runId) {
+        console.error(
+          "분석 runId를 찾을 수 없습니다.",
+          currentSearchSession
+        );
+        return;
+      }
+
+      try {
+        await fetchAllTimeResults();
+        await updateTime();
+      } catch (error) {
+        console.error(
+          "Search result initialization error:",
+          error
+        );
+
+        alert(
+          "탐색 결과를 불러오지 못했습니다."
+        );
+      }
+    };
+
+  initializeSearchResult();
 })();

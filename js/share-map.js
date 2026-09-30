@@ -1,27 +1,43 @@
 (() => {
   const mapElement =
-    document.querySelector("#share-map");
+    document.querySelector(
+      "#share-map"
+    );
 
   const locationElement =
-    document.querySelector("#share-location");
+    document.querySelector(
+      "#share-location"
+    );
 
   const lastSeenTimeElement =
-    document.querySelector("#share-last-seen-time");
+    document.querySelector(
+      "#share-last-seen-time"
+    );
 
   const priorityList =
-    document.querySelector("#share-priority-list");
+    document.querySelector(
+      "#share-priority-list"
+    );
 
   const shareButton =
-    document.querySelector("#share-button");
+    document.querySelector(
+      "#share-button"
+    );
 
   const additionalInfoSection =
-    document.querySelector("#share-additional-info");
+    document.querySelector(
+      "#share-additional-info"
+    );
 
   const additionalInfoText =
-    document.querySelector("#share-additional-info-text");
+    document.querySelector(
+      "#share-additional-info-text"
+    );
 
   const shareBackButton =
-    document.querySelector("#share-back-button");
+    document.querySelector(
+      "#share-back-button"
+    );
 
   const hasActiveSearch =
     sessionStorage.getItem(
@@ -40,17 +56,22 @@
     longitude: 126.9780
   };
 
-  const decodeShareData = (encodedData) => {
+  const decodeShareData = (
+    encodedData
+  ) => {
     if (!encodedData) {
       return null;
     }
 
     try {
-      let base64 = encodedData
-        .replaceAll("-", "+")
-        .replaceAll("_", "/");
+      let base64 =
+        encodedData
+          .replaceAll("-", "+")
+          .replaceAll("_", "/");
 
-      while (base64.length % 4 !== 0) {
+      while (
+        base64.length % 4 !== 0
+      ) {
         base64 += "=";
       }
 
@@ -74,7 +95,8 @@
 
       if (
         !parsedData ||
-        typeof parsedData !== "object" ||
+        typeof parsedData !==
+        "object" ||
         Array.isArray(parsedData)
       ) {
         return null;
@@ -105,39 +127,46 @@
     );
   };
 
-  const getSessionSearchData = () => {
-    const storageKeys = [
-      "goldenStepSearchData",
-      "searchData",
-      "searchFormData"
-    ];
+  const getSessionSearchData =
+    () => {
+      const storageKeys = [
+        "goldenStepSearchData",
+        "searchData",
+        "searchFormData"
+      ];
 
-    for (const key of storageKeys) {
-      const storedValue =
-        sessionStorage.getItem(key);
+      for (
+        const key of storageKeys
+      ) {
+        const storedValue =
+          sessionStorage.getItem(
+            key
+          );
 
-      if (!storedValue) {
-        continue;
-      }
-
-      try {
-        const parsedValue =
-          JSON.parse(storedValue);
-
-        if (
-          parsedValue &&
-          typeof parsedValue ===
-          "object"
-        ) {
-          return parsedValue;
+        if (!storedValue) {
+          continue;
         }
-      } catch {
-        continue;
-      }
-    }
 
-    return {};
-  };
+        try {
+          const parsedValue =
+            JSON.parse(
+              storedValue
+            );
+
+          if (
+            parsedValue &&
+            typeof parsedValue ===
+            "object"
+          ) {
+            return parsedValue;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      return {};
+    };
 
   const getSearchData = () => {
     const urlData =
@@ -150,37 +179,20 @@
     return getSessionSearchData();
   };
 
-  const getCompletedPriorityIds = () => {
+  const getPriorityPlaces = () => {
     const searchData =
       getSearchData();
 
     if (
       Array.isArray(
-        searchData.completedPriorityIds
+        searchData.priorityPlaces
       )
     ) {
-      return searchData.completedPriorityIds;
+      return searchData
+        .priorityPlaces;
     }
 
-    const storedValue =
-      sessionStorage.getItem(
-        "goldenStepCompletedPriorities"
-      );
-
-    if (!storedValue) {
-      return [];
-    }
-
-    try {
-      const parsedValue =
-        JSON.parse(storedValue);
-
-      return Array.isArray(parsedValue)
-        ? parsedValue
-        : [];
-    } catch {
-      return [];
-    }
+    return [];
   };
 
   const getLocation = () => {
@@ -191,19 +203,25 @@
       Number(
         searchData.latitude ??
         searchData.lat ??
-        searchData.lastLocationLat
+        searchData
+          .lastLocationLat
       );
 
     const longitude =
       Number(
         searchData.longitude ??
         searchData.lng ??
-        searchData.lastLocationLng
+        searchData
+          .lastLocationLng
       );
 
     if (
-      Number.isFinite(latitude) &&
-      Number.isFinite(longitude) &&
+      Number.isFinite(
+        latitude
+      ) &&
+      Number.isFinite(
+        longitude
+      ) &&
       latitude >= -90 &&
       latitude <= 90 &&
       longitude >= -180 &&
@@ -225,7 +243,8 @@
       searchData.address ??
       searchData.location ??
       searchData.locationName ??
-      searchData.lastLocationAddress ??
+      searchData
+        .lastLocationAddress ??
       "위치 정보가 없습니다."
     );
   };
@@ -296,15 +315,20 @@
           lastSeenTime
         );
 
-      lastSeenTimeElement.textContent =
+      lastSeenTimeElement
+        .textContent =
         formattedTime
           ? `마지막 확인 시각 ${formattedTime}`
           : "마지막 확인 시각 정보가 없습니다.";
     }
 
     const additionalInfo =
-      typeof searchData.additionalInfo === "string"
-        ? searchData.additionalInfo.trim()
+      typeof searchData
+        .additionalInfo ===
+        "string"
+        ? searchData
+          .additionalInfo
+          .trim()
         : "";
 
     if (
@@ -312,17 +336,18 @@
       additionalInfoText
     ) {
       if (additionalInfo) {
-        additionalInfoText.textContent =
+        additionalInfoText
+          .textContent =
           additionalInfo;
 
-        additionalInfoSection.hidden =
-          false;
+        additionalInfoSection
+          .hidden = false;
       } else {
-        additionalInfoText.textContent =
-          "";
+        additionalInfoText
+          .textContent = "";
 
-        additionalInfoSection.hidden =
-          true;
+        additionalInfoSection
+          .hidden = true;
       }
     }
   };
@@ -330,71 +355,106 @@
   const createMarkerIcon = () => {
     return {
       content: `
-      <div class="board-location-marker">
-        <div class="board-location-marker-pin">
-          <span></span>
+        <div class="board-location-marker">
+          <div class="board-location-marker-pin">
+            <span></span>
+          </div>
         </div>
-      </div>
-    `,
-      anchor: new naver.maps.Point(20, 42)
+      `,
+      anchor:
+        new naver.maps.Point(
+          20,
+          42
+        )
     };
   };
 
-  const createPriorityCircles = (
-    map,
-    latitude,
-    longitude
+  const getPriorityColor = (
+    priorityRank
   ) => {
-    const completedPriorityIds =
-      getCompletedPriorityIds();
+    if (
+      Number(priorityRank) === 1
+    ) {
+      return "#EF4444";
+    }
 
-    const priorityAreas = [
-      {
-        priorityId: "priority-1",
-        latOffset: 0.0022,
-        lngOffset: -0.0018,
-        radius: 150,
-        color: "#EF4444"
-      },
-      {
-        priorityId: "priority-2",
-        latOffset: -0.0016,
-        lngOffset: 0.0024,
-        radius: 130,
-        color: "#FFB000"
-      },
-      {
-        priorityId: "priority-3",
-        latOffset: 0.0011,
-        lngOffset: 0.0031,
-        radius: 120,
-        color: "#1E90FF"
-      }
-    ];
+    if (
+      Number(priorityRank) === 2
+    ) {
+      return "#FFB000";
+    }
 
-    priorityAreas.forEach(
-      (area) => {
+    return "#1E90FF";
+  };
+
+  const getPriorityRadius = (
+    priorityRank
+  ) => {
+    if (
+      Number(priorityRank) === 1
+    ) {
+      return 150;
+    }
+
+    if (
+      Number(priorityRank) === 2
+    ) {
+      return 130;
+    }
+
+    return 120;
+  };
+
+  const createPriorityCircles = (
+    map
+  ) => {
+    const priorityPlaces =
+      getPriorityPlaces();
+
+    priorityPlaces.forEach(
+      (place) => {
+        if (place.checked) {
+          return;
+        }
+
+        const latitude =
+          Number(place.lat);
+
+        const longitude =
+          Number(place.lng);
+
         if (
-          completedPriorityIds.includes(
-            area.priorityId
+          !Number.isFinite(
+            latitude
+          ) ||
+          !Number.isFinite(
+            longitude
           )
         ) {
           return;
         }
 
+        const color =
+          getPriorityColor(
+            place.priorityRank
+          );
+
+        const radius =
+          getPriorityRadius(
+            place.priorityRank
+          );
+
         new naver.maps.Circle({
           map,
           center:
             new naver.maps.LatLng(
-              latitude +
-              area.latOffset,
-              longitude +
-              area.lngOffset
+              latitude,
+              longitude
             ),
-          radius: area.radius,
-          fillColor: area.color,
+          radius,
+          fillColor: color,
           fillOpacity: 0.22,
-          strokeColor: area.color,
+          strokeColor: color,
           strokeOpacity: 0.5,
           strokeWeight: 1
         });
@@ -405,7 +465,8 @@
   const initializeMap = () => {
     if (
       !mapElement ||
-      typeof naver === "undefined" ||
+      typeof naver ===
+      "undefined" ||
       !naver.maps
     ) {
       return;
@@ -431,7 +492,9 @@
           zoomControl: true,
           zoomControlOptions: {
             position:
-              naver.maps.Position.TOP_RIGHT
+              naver.maps
+                .Position
+                .TOP_RIGHT
           },
           mapTypeControl: false,
           scaleControl: false,
@@ -450,142 +513,154 @@
     });
 
     createPriorityCircles(
-      map,
-      location.latitude,
-      location.longitude
+      map
     );
 
-    window.setTimeout(() => {
-      naver.maps.Event.trigger(
-        map,
-        "resize"
-      );
+    window.setTimeout(
+      () => {
+        naver.maps.Event
+          .trigger(
+            map,
+            "resize"
+          );
 
-      map.setCenter(center);
-    }, 100);
+        map.setCenter(
+          center
+        );
+      },
+      100
+    );
   };
 
-  const getPriorityData = () => {
-    const searchData =
-      getSearchData();
-
-    const candidates = [
-      searchData.priorityLocations,
-      searchData.priorityAreas,
-      searchData.priorities,
-      searchData.analysisResults
-    ];
-
-    for (
-      let index = 0;
-      index < candidates.length;
-      index += 1
-    ) {
-      if (
-        Array.isArray(
-          candidates[index]
-        ) &&
-        candidates[index].length > 0
-      ) {
-        return candidates[index];
+  const renderPriorityLocations =
+    () => {
+      if (!priorityList) {
+        return;
       }
-    }
 
-    return [];
-  };
+      const priorities =
+        getPriorityPlaces();
 
-  const renderPriorityLocations = () => {
-    if (!priorityList) {
-      return;
-    }
+      if (
+        priorities.length === 0
+      ) {
+        priorityList.innerHTML = `
+          <div class="share-empty-state">
+            우선 확인 지역 분석 결과가 아직 없습니다.
+          </div>
+        `;
 
-    const priorities =
-      getPriorityData();
+        return;
+      }
 
-    if (
-      priorities.length === 0
-    ) {
-      priorityList.innerHTML = `
-        <div class="share-empty-state">
-          우선 확인 지역 분석 결과가 아직 없습니다.
-        </div>
-      `;
+      priorityList.innerHTML = "";
 
-      return;
-    }
+      priorities.forEach(
+        (priority, index) => {
+          const item =
+            document.createElement(
+              "div"
+            );
 
-    priorityList.innerHTML = "";
+          item.className =
+            "share-priority-item";
 
-    priorities.forEach(
-      (priority, index) => {
-        const item =
-          document.createElement(
-            "div"
-          );
+          if (priority.checked) {
+            item.classList.add(
+              "is-checked"
+            );
+          }
 
-        item.className =
-          "share-priority-item";
-
-        const rank =
-          document.createElement(
-            "span"
-          );
-
-        rank.className =
-          "share-priority-rank";
-
-        rank.textContent =
-          String(index + 1);
-
-        const content =
-          document.createElement(
-            "div"
-          );
-
-        content.className =
-          "share-priority-content";
-
-        const name =
-          document.createElement(
-            "strong"
-          );
-
-        name.textContent =
-          priority.name ??
-          priority.locationName ??
-          priority.placeName ??
-          `우선 확인 지역 ${index + 1}`;
-
-        content.appendChild(name);
-
-        const address =
-          priority.address ??
-          priority.location ??
-          "";
-
-        if (address) {
-          const addressElement =
+          const rank =
             document.createElement(
               "span"
             );
 
-          addressElement.textContent =
-            address;
+          rank.className =
+            "share-priority-rank";
+
+          rank.textContent =
+            String(
+              priority
+                .priorityRank ??
+              index + 1
+            );
+
+          const content =
+            document.createElement(
+              "div"
+            );
+
+          content.className =
+            "share-priority-content";
+
+          const name =
+            document.createElement(
+              "strong"
+            );
+
+          name.textContent =
+            priority.name ??
+            `우선 확인 지역 ${index + 1}`;
 
           content.appendChild(
-            addressElement
+            name
           );
+
+          const address =
+            priority.address ?? "";
+
+          if (address) {
+            const addressElement =
+              document
+                .createElement(
+                  "span"
+                );
+
+            addressElement
+              .textContent =
+              address;
+
+            content.appendChild(
+              addressElement
+            );
+          }
+
+          if (priority.checked) {
+            const checkedElement =
+              document
+                .createElement(
+                  "span"
+                );
+
+            checkedElement
+              .className =
+              "share-priority-checked";
+
+            checkedElement
+              .textContent =
+              "탐색 완료";
+
+            content.appendChild(
+              checkedElement
+            );
+          }
+
+          item.appendChild(
+            rank
+          );
+
+          item.appendChild(
+            content
+          );
+
+          priorityList
+            .appendChild(
+              item
+            );
         }
-
-        item.appendChild(rank);
-        item.appendChild(content);
-
-        priorityList.appendChild(
-          item
-        );
-      }
-    );
-  };
+      );
+    };
 
   const copyText = async (
     text
@@ -594,9 +669,9 @@
       navigator.clipboard &&
       window.isSecureContext
     ) {
-      await navigator.clipboard.writeText(
-        text
-      );
+      await navigator
+        .clipboard
+        .writeText(text);
 
       return;
     }
@@ -725,93 +800,104 @@
       toast
     );
 
-    requestAnimationFrame(() => {
-      toast.style.opacity =
-        "1";
+    requestAnimationFrame(
+      () => {
+        toast.style.opacity =
+          "1";
 
-      toast.style.bottom =
-        "48px";
-    });
+        toast.style.bottom =
+          "48px";
+      }
+    );
 
-    window.setTimeout(() => {
-      toast.style.opacity =
-        "0";
+    window.setTimeout(
+      () => {
+        toast.style.opacity =
+          "0";
 
-      toast.style.bottom =
-        "40px";
+        toast.style.bottom =
+          "40px";
 
-      window.setTimeout(() => {
-        toast.remove();
-      }, 180);
-    }, 1800);
+        window.setTimeout(
+          () => {
+            toast.remove();
+          },
+          180
+        );
+      },
+      1800
+    );
   };
 
-  const handleShareClick = async () => {
-    const currentUrl =
-      window.location.href;
+  const handleShareClick =
+    async () => {
+      const currentUrl =
+        window.location.href;
 
-    const shareData = {
-      title:
-        "Golden Step 탐색 정보",
-      text:
-        "현재 탐색 정보를 공유합니다.",
-      url:
-        currentUrl
-    };
+      const shareData = {
+        title:
+          "Golden Step 탐색 정보",
+        text:
+          "현재 탐색 정보를 공유합니다.",
+        url:
+          currentUrl
+      };
 
-    if (navigator.share) {
-      try {
-        await navigator.share(
-          shareData
-        );
+      if (navigator.share) {
+        try {
+          await navigator.share(
+            shareData
+          );
 
-        return;
-      } catch (error) {
-        if (
-          error &&
-          error.name ===
-          "AbortError"
-        ) {
           return;
+        } catch (error) {
+          if (
+            error &&
+            error.name ===
+            "AbortError"
+          ) {
+            return;
+          }
         }
       }
-    }
 
-    try {
-      await copyText(
-        currentUrl
-      );
+      try {
+        await copyText(
+          currentUrl
+        );
 
-      showShareToast(
-        "공유 링크가 복사되었습니다."
-      );
-    } catch (error) {
-      console.error(
-        "Share link copy error:",
-        error
-      );
+        showShareToast(
+          "공유 링크가 복사되었습니다."
+        );
+      } catch (error) {
+        console.error(
+          "Share link copy error:",
+          error
+        );
 
-      alert(
-        "공유 링크를 복사하지 못했습니다."
-      );
-    }
-  };
+        alert(
+          "공유 링크를 복사하지 못했습니다."
+        );
+      }
+    };
 
   if (shareButton) {
-    shareButton.addEventListener(
-      "click",
-      handleShareClick
-    );
+    shareButton
+      .addEventListener(
+        "click",
+        handleShareClick
+      );
   }
 
   if (shareBackButton) {
-    shareBackButton.addEventListener(
-      "click",
-      () => {
-        window.location.href =
-          "./search-result.html";
-      }
-    );
+    shareBackButton
+      .addEventListener(
+        "click",
+        () => {
+          window.location.href =
+            "./search-result.html";
+        }
+      );
   }
 
   renderSearchInfo();
