@@ -358,25 +358,22 @@
 
     const priorityAreas = [
       {
-        priorityId: "priority-1",
         latOffset: 0.0022,
         lngOffset: -0.0018,
         radius: 150,
-        color: "#B98282"
+        color: "#EF4444"
       },
       {
-        priorityId: "priority-2",
         latOffset: -0.0016,
         lngOffset: 0.0024,
         radius: 130,
-        color: "#C2A16B"
+        color: "#FFB000"
       },
       {
-        priorityId: "priority-3",
         latOffset: 0.0011,
         lngOffset: 0.0031,
         radius: 120,
-        color: "#5B9BD5"
+        color: "#1E90FF"
       }
     ];
 

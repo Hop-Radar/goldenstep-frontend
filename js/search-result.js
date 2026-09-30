@@ -407,14 +407,14 @@
 
   const getPriorityColor = (priority) => {
     if (priority === "high") {
-      return "#B98282";
+      return "#EF4444";
     }
 
     if (priority === "medium") {
-      return "#C2A16B";
+      return "#FFB000";
     }
 
-    return "#7FB7D8";
+    return "#1E90FF";
   };
 
   const clearResultPriorityAreas = () => {
@@ -516,29 +516,29 @@
       );
 
     new naver.maps.Marker({
-  map: resultMap,
-  position: getNaverLatLng(
-    SEARCH_LOCATION.lat,
-    SEARCH_LOCATION.lng
-  ),
-  icon: {
-    content: `
+      map: resultMap,
+      position: getNaverLatLng(
+        SEARCH_LOCATION.lat,
+        SEARCH_LOCATION.lng
+      ),
+      icon: {
+        content: `
       <div class="board-location-marker">
         <div class="board-location-marker-pin">
           <span></span>
         </div>
       </div>
     `,
-    anchor:
-      new naver.maps.Point(
-        20,
-        42
-      )
-  }
-});
+        anchor:
+          new naver.maps.Point(
+            20,
+            42
+          )
+      }
+    });
 
   };
-  
+
   const updateTime = () => {
     if (
       !timeRange ||
