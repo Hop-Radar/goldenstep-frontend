@@ -55,39 +55,60 @@ let isPersonInformationCompleted = false;
 
 const MOCK_PLACES = [
   {
-    title: "롯데월드",
+    name: "롯데월드",
     roadAddress: "서울특별시 송파구 올림픽로 240",
     jibunAddress: "서울특별시 송파구 잠실동 40-1",
-    latitude: 37.5111158,
-    longitude: 127.098167
+    lat: 37.5111,
+    lng: 127.0982
   },
   {
-    title: "롯데월드타워",
-    roadAddress: "서울특별시 송파구 올림픽로 300",
-    jibunAddress: "서울특별시 송파구 신천동 29",
-    latitude: 37.512558,
-    longitude: 127.102535
-  },
-  {
-    title: "에버랜드",
+    name: "에버랜드",
     roadAddress: "경기도 용인시 처인구 포곡읍 에버랜드로 199",
     jibunAddress: "경기도 용인시 처인구 포곡읍 전대리 310",
-    latitude: 37.293884,
-    longitude: 127.202393
+    lat: 37.2933,
+    lng: 127.2008
   },
   {
-    title: "서울역",
+    name: "타임스퀘어",
+    roadAddress: "서울특별시 영등포구 영중로 15",
+    jibunAddress: "서울특별시 영등포구 영등포동4가 442",
+    lat: 37.5170,
+    lng: 126.9030
+  },
+  {
+    name: "서울역 (고속철도)",
     roadAddress: "서울특별시 용산구 한강대로 405",
     jibunAddress: "서울특별시 용산구 동자동 43-205",
-    latitude: 37.5546788,
-    longitude: 126.9706069
+    lat: 37.5540730,
+    lng: 126.9707021
   },
   {
-    title: "동덕여자대학교",
-    roadAddress: "서울특별시 성북구 화랑로13길 60",
-    jibunAddress: "서울특별시 성북구 하월곡동 23-1",
-    latitude: 37.606823,
-    longitude: 127.041308
+    name: "고려대학교 서울캠퍼스",
+    roadAddress: "서울특별시 성북구 안암로 145",
+    jibunAddress: "서울특별시 성북구 안암동5가 1-2",
+    lat: 37.5894,
+    lng: 127.0325
+  },
+  {
+    name: "연세대학교 신촌캠퍼스",
+    roadAddress: "서울특별시 서대문구 연세로 50",
+    jibunAddress: "서울특별시 서대문구 신촌동 134",
+    lat: 37.5658,
+    lng: 126.9386
+  },
+  {
+    name: "서울대학교 관악캠퍼스",
+    roadAddress: "서울특별시 관악구 관악로 1",
+    jibunAddress: "서울특별시 관악구 신림동 산56-1",
+    lat: 37.4599,
+    lng: 126.9519
+  },
+  {
+    name: "명동역 4호선",
+    roadAddress: "서울특별시 중구 퇴계로 126",
+    jibunAddress: "서울특별시 중구 충무로2가 109-2",
+    lat: 37.5609,
+    lng: 126.9862
   }
 ];
 
@@ -826,44 +847,28 @@ const renderLocationSearchResults = (
     false;
 };
 
-const searchMockPlaces = (
-  keyword
-) => {
-  const normalizedKeyword =
-    keyword
-      .replace(/\s/g, "")
+const searchMockPlaces = (query) => {
+  const normalizedQuery =
+    query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  return MOCK_PLACES.filter((place) => {
+    const searchableText = [
+      place.name,
+      place.roadAddress,
+      place.jibunAddress
+    ]
+      .filter(Boolean)
+      .join(" ")
       .toLowerCase();
 
-  return MOCK_PLACES.filter(
-    (place) => {
-      const title =
-        place.title
-          .replace(/\s/g, "")
-          .toLowerCase();
-
-      const roadAddress =
-        place.roadAddress
-          .replace(/\s/g, "")
-          .toLowerCase();
-
-      const jibunAddress =
-        place.jibunAddress
-          .replace(/\s/g, "")
-          .toLowerCase();
-
-      return (
-        title.includes(
-          normalizedKeyword
-        ) ||
-        roadAddress.includes(
-          normalizedKeyword
-        ) ||
-        jibunAddress.includes(
-          normalizedKeyword
-        )
-      );
-    }
-  );
+    return searchableText.includes(
+      normalizedQuery
+    );
+  });
 };
 
 const selectMockPlace = (
@@ -873,14 +878,27 @@ const selectMockPlace = (
     return;
   }
 
+  const latitude =
+    Number(place.lat);
+
+  const longitude =
+    Number(place.lng);
+
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return;
+  }
+
   const position =
     new naver.maps.LatLng(
-      place.latitude,
-      place.longitude
+      latitude,
+      longitude
     );
 
   lastLocation.value =
-    place.title;
+    place.name;
 
   searchMap.setCenter(
     position
@@ -889,9 +907,17 @@ const selectMockPlace = (
   searchMap.setZoom(17);
 
   setLocationMarker(
-    place.latitude,
-    place.longitude
+    latitude,
+    longitude
   );
+
+  pendingRoadAddress =
+    place.roadAddress || "";
+
+  pendingJibunAddress =
+    place.jibunAddress || "";
+
+  renderSelectedLocation();
 
   hideLocationSearchResults();
 };
@@ -914,44 +940,81 @@ const createMockPlaceButton = (
     "location-result-address";
 
   title.textContent =
-    place.title;
-
-  const roadWrapper =
-    document.createElement("span");
-
-  roadWrapper.className =
-    "location-result-jibun";
-
-  const roadLabel =
-    document.createElement("span");
-
-  roadLabel.className =
-    "location-result-label";
-
-  roadLabel.textContent =
-    "도로명";
-
-  const roadAddress =
-    document.createElement("span");
-
-  roadAddress.textContent =
-    place.roadAddress;
-
-  roadWrapper.appendChild(
-    roadLabel
-  );
-
-  roadWrapper.appendChild(
-    roadAddress
-  );
+    place.name;
 
   button.appendChild(
     title
   );
 
-  button.appendChild(
-    roadWrapper
-  );
+  if (place.roadAddress) {
+    const roadWrapper =
+      document.createElement("span");
+
+    roadWrapper.className =
+      "location-result-jibun";
+
+    const roadLabel =
+      document.createElement("span");
+
+    roadLabel.className =
+      "location-result-label";
+
+    roadLabel.textContent =
+      "도로명";
+
+    const roadAddress =
+      document.createElement("span");
+
+    roadAddress.textContent =
+      place.roadAddress;
+
+    roadWrapper.appendChild(
+      roadLabel
+    );
+
+    roadWrapper.appendChild(
+      roadAddress
+    );
+
+    button.appendChild(
+      roadWrapper
+    );
+  }
+
+  if (place.jibunAddress) {
+    const jibunWrapper =
+      document.createElement("span");
+
+    jibunWrapper.className =
+      "location-result-jibun";
+
+    const jibunLabel =
+      document.createElement("span");
+
+    jibunLabel.className =
+      "location-result-label";
+
+    jibunLabel.textContent =
+      "지번";
+
+    const jibunAddress =
+      document.createElement("span");
+
+    jibunAddress.textContent =
+      place.jibunAddress;
+
+    jibunWrapper.appendChild(
+      jibunLabel
+    );
+
+    jibunWrapper.appendChild(
+      jibunAddress
+    );
+
+    button.appendChild(
+      jibunWrapper
+    );
+  }
 
   button.addEventListener(
     "click",

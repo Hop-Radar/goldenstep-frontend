@@ -14,6 +14,27 @@
   const shareButton =
     document.querySelector("#share-button");
 
+  const additionalInfoSection =
+    document.querySelector("#share-additional-info");
+
+  const additionalInfoText =
+    document.querySelector("#share-additional-info-text");
+
+  const shareBackButton =
+    document.querySelector("#share-back-button");
+
+  const hasActiveSearch =
+    sessionStorage.getItem(
+      "goldenStepSearchData"
+    );
+
+  if (
+    shareBackButton &&
+    !hasActiveSearch
+  ) {
+    shareBackButton.hidden = true;
+  }
+
   const DEFAULT_LOCATION = {
     latitude: 37.5665,
     longitude: 126.9780
@@ -280,44 +301,42 @@
           ? `마지막 확인 시각 ${formattedTime}`
           : "마지막 확인 시각 정보가 없습니다.";
     }
+
+    const additionalInfo =
+      typeof searchData.additionalInfo === "string"
+        ? searchData.additionalInfo.trim()
+        : "";
+
+    if (
+      additionalInfoSection &&
+      additionalInfoText
+    ) {
+      if (additionalInfo) {
+        additionalInfoText.textContent =
+          additionalInfo;
+
+        additionalInfoSection.hidden =
+          false;
+      } else {
+        additionalInfoText.textContent =
+          "";
+
+        additionalInfoSection.hidden =
+          true;
+      }
+    }
   };
 
   const createMarkerIcon = () => {
     return {
       content: `
-        <div
-          style="
-            position: relative;
-            box-sizing: border-box;
-            width: 22px;
-            height: 22px;
-            border: 3px solid #ffffff;
-            border-radius: 50%;
-            background: #2563eb;
-            box-shadow:
-              0 2px 7px rgb(15 23 42 / 28%),
-              0 0 0 1px rgb(37 99 235 / 12%);
-          "
-        >
-          <span
-            style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              width: 6px;
-              height: 6px;
-              border-radius: 50%;
-              background: #ffffff;
-              transform: translate(-50%, -50%);
-            "
-          ></span>
+      <div class="board-location-marker">
+        <div class="board-location-marker-pin">
+          <span></span>
         </div>
-      `,
-      anchor:
-        new naver.maps.Point(
-          11,
-          11
-        )
+      </div>
+    `,
+      anchor: new naver.maps.Point(20, 42)
     };
   };
 
@@ -782,6 +801,16 @@
     shareButton.addEventListener(
       "click",
       handleShareClick
+    );
+  }
+
+  if (shareBackButton) {
+    shareBackButton.addEventListener(
+      "click",
+      () => {
+        window.location.href =
+          "./search-result.html";
+      }
     );
   }
 

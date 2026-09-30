@@ -19,6 +19,14 @@
   const completeModalLocation = document.querySelector("#complete-modal-location");
   const completeModalCancel = document.querySelector("#complete-modal-cancel");
   const completeModalConfirm = document.querySelector("#complete-modal-confirm");
+  const searchEndButton = document.querySelector("#search-end-button");
+  const allCompleteModal = document.querySelector("#all-complete-modal");
+  const allCompleteModalClose = document.querySelector("#all-complete-modal-close");
+  const newSearchButton = document.querySelector("#new-search-button");
+  const allCompleteEndButton = document.querySelector("#all-complete-end-button");
+  const searchEndConfirmModal = document.querySelector("#search-end-confirm-modal");
+  const continueSearchButton = document.querySelector("#continue-search-button");
+  const confirmSearchEndButton = document.querySelector("#confirm-search-end-button");
 
   const TIME_POINTS = [
     {
@@ -508,26 +516,29 @@
       );
 
     new naver.maps.Marker({
-      map: resultMap,
-      position: getNaverLatLng(
-        SEARCH_LOCATION.lat,
-        SEARCH_LOCATION.lng
-      ),
-      icon: {
-        content: `
-          <div class="search-origin-marker">
-            <span></span>
-          </div>
-        `,
-        anchor:
-          new naver.maps.Point(
-            20,
-            40
-          )
-      }
-    });
-  };
+  map: resultMap,
+  position: getNaverLatLng(
+    SEARCH_LOCATION.lat,
+    SEARCH_LOCATION.lng
+  ),
+  icon: {
+    content: `
+      <div class="board-location-marker">
+        <div class="board-location-marker-pin">
+          <span></span>
+        </div>
+      </div>
+    `,
+    anchor:
+      new naver.maps.Point(
+        20,
+        42
+      )
+  }
+});
 
+  };
+  
   const updateTime = () => {
     if (
       !timeRange ||
@@ -1438,6 +1449,103 @@
     }
   };
 
+  const syncBodyOverflow = () => {
+    const hasOpenModal = [
+      completeModal,
+      allCompleteModal,
+      searchEndConfirmModal
+    ].some(
+      (modal) =>
+        modal &&
+        !modal.hidden
+    );
+
+    const hasOpenDrawer =
+      detailDrawer &&
+      detailDrawer.classList.contains(
+        "is-open"
+      );
+
+    document.body.style.overflow =
+      hasOpenModal ||
+        hasOpenDrawer
+        ? "hidden"
+        : "";
+  };
+
+  const openAllCompleteModal = () => {
+    if (!allCompleteModal) {
+      return;
+    }
+
+    allCompleteModal.hidden =
+      false;
+
+    syncBodyOverflow();
+  };
+
+  const closeAllCompleteModal = () => {
+    if (!allCompleteModal) {
+      return;
+    }
+
+    allCompleteModal.hidden =
+      true;
+
+    syncBodyOverflow();
+  };
+
+  const openSearchEndConfirmModal = () => {
+    if (allCompleteModal) {
+      allCompleteModal.hidden =
+        true;
+    }
+
+    if (!searchEndConfirmModal) {
+      return;
+    }
+
+    searchEndConfirmModal.hidden =
+      false;
+
+    syncBodyOverflow();
+  };
+
+  const closeSearchEndConfirmModal = () => {
+    if (!searchEndConfirmModal) {
+      return;
+    }
+
+    searchEndConfirmModal.hidden =
+      true;
+
+    syncBodyOverflow();
+  };
+
+  const clearCurrentSearchData = () => {
+    sessionStorage.removeItem(
+      "goldenStepSearchData"
+    );
+
+    sessionStorage.removeItem(
+      "goldenStepCompletedPriorities"
+    );
+  };
+
+  const handleNewSearch = () => {
+    clearCurrentSearchData();
+
+    window.location.href =
+      "./search-form.html";
+  };
+
+  const handleSearchEndConfirm = () => {
+    clearCurrentSearchData();
+
+    window.location.href =
+      "./index.html";
+  };
+
   const handleDrawerCompleteClick = () => {
     if (
       !activeDetailLocation ||
@@ -1476,10 +1584,12 @@
       pendingCompleteItem;
 
     if (completeModal) {
-      completeModal.hidden = true;
+      completeModal.hidden =
+        true;
     }
 
-    pendingCompleteItem = null;
+    pendingCompleteItem =
+      null;
 
     moveItemToCompleted(
       completedItem
@@ -1498,6 +1608,17 @@
 
     document.body.style.overflow =
       "";
+
+    const completedCount =
+      completedPriorityList
+        ? completedPriorityList.querySelectorAll(
+          ".priority-item"
+        ).length
+        : getCompletedPriorityIds().length;
+
+    if (completedCount >= 3) {
+      openAllCompleteModal();
+    }
   };
 
   const restoreCompletedPriorities = () => {
@@ -1613,8 +1734,34 @@
     "keydown",
     (event) => {
       if (
+        event.key === "Enter" &&
+        completeModal &&
+        !completeModal.hidden
+      ) {
+        event.preventDefault();
+        handleCompleteConfirm();
+        return;
+      }
+
+      if (
         event.key !== "Escape"
       ) {
+        return;
+      }
+
+      if (
+        searchEndConfirmModal &&
+        !searchEndConfirmModal.hidden
+      ) {
+        closeSearchEndConfirmModal();
+        return;
+      }
+
+      if (
+        allCompleteModal &&
+        !allCompleteModal.hidden
+      ) {
+        closeAllCompleteModal();
         return;
       }
 
@@ -1641,6 +1788,78 @@
     searchBoardButton.addEventListener(
       "click",
       handleSearchBoardClick
+    );
+  }
+
+  if (searchEndButton) {
+    searchEndButton.addEventListener(
+      "click",
+      openSearchEndConfirmModal
+    );
+  }
+
+  if (allCompleteModalClose) {
+    allCompleteModalClose.addEventListener(
+      "click",
+      closeAllCompleteModal
+    );
+  }
+
+  if (newSearchButton) {
+    newSearchButton.addEventListener(
+      "click",
+      handleNewSearch
+    );
+  }
+
+  if (allCompleteEndButton) {
+    allCompleteEndButton.addEventListener(
+      "click",
+      openSearchEndConfirmModal
+    );
+  }
+
+  if (continueSearchButton) {
+    continueSearchButton.addEventListener(
+      "click",
+      closeSearchEndConfirmModal
+    );
+  }
+
+  if (confirmSearchEndButton) {
+    confirmSearchEndButton.addEventListener(
+      "click",
+      handleSearchEndConfirm
+    );
+  }
+
+  if (allCompleteModal) {
+    allCompleteModal.addEventListener(
+      "click",
+      (event) => {
+        if (
+          event.target.hasAttribute(
+            "data-close-all-complete-modal"
+          )
+        ) {
+          closeAllCompleteModal();
+        }
+      }
+    );
+  }
+
+  if (searchEndConfirmModal) {
+    searchEndConfirmModal.addEventListener(
+      "click",
+      (event) => {
+        if (
+          event.target.hasAttribute(
+            "data-close-search-end-modal"
+          )
+        ) {
+          closeSearchEndConfirmModal();
+        }
+      }
     );
   }
 
