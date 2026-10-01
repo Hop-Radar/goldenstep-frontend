@@ -849,7 +849,7 @@ const renderLocationSearchResults = (
 
 const searchPlaces = async (query) => {
   const response = await fetch(
-    `http://127.0.0.1:8080/api/maps/places?query=${encodeURIComponent(query)}`,
+    `/api/maps/places?query=${encodeURIComponent(query)}`,
     {
       method: "GET",
       credentials: "include"
@@ -1808,7 +1808,7 @@ const requestSearchAnalysis = async (
 
   const response =
     await fetch(
-      "http://127.0.0.1:8080/api/search/input",
+      "/api/search/input",
       {
         method: "POST",
         headers: {

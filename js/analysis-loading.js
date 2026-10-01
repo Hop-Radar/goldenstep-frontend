@@ -3,7 +3,7 @@ const progressValue = document.querySelector("#progress-value");
 const progressTrack = document.querySelector(".progress-track");
 const analysisSteps = document.querySelectorAll(".analysis-step");
 
-const API_BASE_URL = "http://127.0.0.1:8080";
+const API_BASE_URL = "";
 const STATUS_CHECK_INTERVAL = 1000;
 const MAX_WAITING_PROGRESS = 92;
 
