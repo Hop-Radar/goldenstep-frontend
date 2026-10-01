@@ -28,7 +28,7 @@ jobs:
         run: npx --yes html-validate "*.html"
 
       - name: Validate CSS
-        run: npx --yes stylelint "css/**/*.css" --config .stylelintrc.json"
+        run: npx --yes stylelint "css/**/*.css" --config .stylelintrc.json
 
       - name: Validate JavaScript
         run: |
