@@ -5,13 +5,21 @@ const analysisSteps = document.querySelectorAll(".analysis-step");
 
 const API_BASE_URL = "";
 const STATUS_CHECK_INTERVAL = 1000;
+const MAX_ANALYSIS_TIME = 120000;
+const WAITING_PROGRESS_DURATION = 60000;
 const MAX_WAITING_PROGRESS = 92;
+const COMPLETION_DURATION = 600;
+const COMPLETION_DELAY = 500;
 
 let progress = 0;
-let progressInterval = null;
 let statusInterval = null;
+let progressAnimationFrame = null;
+let timeoutId = null;
+let completionTimeoutId = null;
+let loadingStartedAt = null;
 let isCompleted = false;
 let isCheckingStatus = false;
+let isFinishing = false;
 
 const getActiveStep = () => {
   if (progress < 25) {
@@ -107,12 +115,14 @@ const updateSteps = () => {
 };
 
 const updateProgress = () => {
+  const displayProgress = Math.floor(progress);
+
   progressBar.style.width = `${progress}%`;
-  progressValue.textContent = `${progress}%`;
+  progressValue.textContent = `${displayProgress}%`;
 
   progressTrack.setAttribute(
     "aria-valuenow",
-    String(progress)
+    String(displayProgress)
   );
 
   updateSteps();
@@ -122,66 +132,172 @@ const moveToSearchResult = () => {
   window.location.href = "./search-result.html";
 };
 
-const stopIntervals = () => {
-  if (progressInterval) {
-    clearInterval(progressInterval);
-    progressInterval = null;
-  }
-
+const stopStatusCheck = () => {
   if (statusInterval) {
     clearInterval(statusInterval);
     statusInterval = null;
   }
 };
 
-const completeAnalysis = () => {
+const stopProgressAnimation = () => {
+  if (progressAnimationFrame) {
+    cancelAnimationFrame(progressAnimationFrame);
+    progressAnimationFrame = null;
+  }
+};
+
+const stopAnalysisTimeout = () => {
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  }
+};
+
+const stopAllTimers = () => {
+  stopStatusCheck();
+  stopProgressAnimation();
+  stopAnalysisTimeout();
+
+  if (completionTimeoutId) {
+    clearTimeout(completionTimeoutId);
+    completionTimeoutId = null;
+  }
+};
+
+const calculateWaitingProgress = (elapsedTime) => {
+  const ratio = Math.min(
+    elapsedTime / WAITING_PROGRESS_DURATION,
+    1
+  );
+
+  const easedRatio =
+    1 - Math.pow(1 - ratio, 2.4);
+
+  return Math.min(
+    easedRatio * MAX_WAITING_PROGRESS,
+    MAX_WAITING_PROGRESS
+  );
+};
+
+const animateWaitingProgress = (timestamp) => {
+  if (isCompleted || isFinishing) {
+    return;
+  }
+
+  if (!loadingStartedAt) {
+    loadingStartedAt = timestamp;
+  }
+
+  const elapsedTime =
+    timestamp - loadingStartedAt;
+
+  progress = calculateWaitingProgress(
+    elapsedTime
+  );
+
+  updateProgress();
+
+  if (progress < MAX_WAITING_PROGRESS) {
+    progressAnimationFrame =
+      requestAnimationFrame(
+        animateWaitingProgress
+      );
+  }
+};
+
+const finishProgress = () => {
+  if (isFinishing || isCompleted) {
+    return;
+  }
+
+  isFinishing = true;
+
+  stopStatusCheck();
+  stopProgressAnimation();
+  stopAnalysisTimeout();
+
+  const startProgress = progress;
+  const startedAt = performance.now();
+
+  const animateCompletion = (timestamp) => {
+    const elapsedTime =
+      timestamp - startedAt;
+
+    const ratio = Math.min(
+      elapsedTime / COMPLETION_DURATION,
+      1
+    );
+
+    const easedRatio =
+      1 - Math.pow(1 - ratio, 3);
+
+    progress =
+      startProgress +
+      (100 - startProgress) * easedRatio;
+
+    if (ratio >= 1) {
+      progress = 100;
+    }
+
+    updateProgress();
+
+    if (ratio < 1) {
+      progressAnimationFrame =
+        requestAnimationFrame(
+          animateCompletion
+        );
+
+      return;
+    }
+
+    isCompleted = true;
+    isFinishing = false;
+    progressAnimationFrame = null;
+
+    completionTimeoutId =
+      window.setTimeout(
+        moveToSearchResult,
+        COMPLETION_DELAY
+      );
+  };
+
+  progressAnimationFrame =
+    requestAnimationFrame(
+      animateCompletion
+    );
+};
+
+const handleAnalysisFailure = (
+  message = "탐색 분석 중 오류가 발생했습니다. 다시 시도해주세요."
+) => {
   if (isCompleted) {
     return;
   }
 
-  isCompleted = true;
-  progress = 100;
+  stopAllTimers();
 
-  stopIntervals();
-  updateProgress();
+  alert(message);
 
-  window.setTimeout(
-    moveToSearchResult,
-    800
-  );
+  window.location.href =
+    "./search-form.html";
 };
 
-const handleAnalysisFailure = () => {
-  stopIntervals();
-
-  alert(
-    "탐색 분석 중 오류가 발생했습니다. 다시 시도해주세요."
-  );
-
-  window.location.href = "./search-form.html";
-};
-
-const increaseProgress = () => {
-  if (
-    isCompleted ||
-    progress >= MAX_WAITING_PROGRESS
-  ) {
+const handleAnalysisTimeout = () => {
+  if (isCompleted || isFinishing) {
     return;
   }
 
-  const increaseAmount =
-    Math.floor(Math.random() * 2) + 1;
-
-  progress = Math.min(
-    progress + increaseAmount,
-    MAX_WAITING_PROGRESS
+  handleAnalysisFailure(
+    "탐색 분석 시간이 초과되었습니다. 다시 시도해주세요."
   );
-
-  updateProgress();
 };
 
 const checkAnalysisStatus = async () => {
-  if (isCompleted || isCheckingStatus) {
+  if (
+    isCompleted ||
+    isFinishing ||
+    isCheckingStatus
+  ) {
     return;
   }
 
@@ -191,14 +307,9 @@ const checkAnalysisStatus = async () => {
     );
 
   if (!runId) {
-    stopIntervals();
-
-    alert(
+    handleAnalysisFailure(
       "분석 실행 정보를 찾을 수 없습니다. 탐색 정보를 다시 입력해주세요."
     );
-
-    window.location.href =
-      "./search-form.html";
 
     return;
   }
@@ -217,7 +328,8 @@ const checkAnalysisStatus = async () => {
     let responseData = null;
 
     try {
-      responseData = await response.json();
+      responseData =
+        await response.json();
     } catch (error) {
       responseData = null;
     }
@@ -239,7 +351,7 @@ const checkAnalysisStatus = async () => {
       responseData.status ===
       "COMPLETED"
     ) {
-      completeAnalysis();
+      finishProgress();
       return;
     }
 
@@ -255,9 +367,7 @@ const checkAnalysisStatus = async () => {
       error
     );
 
-    stopIntervals();
-
-    alert(
+    handleAnalysisFailure(
       error.message ||
       "분석 상태를 확인하지 못했습니다."
     );
@@ -266,16 +376,27 @@ const checkAnalysisStatus = async () => {
   }
 };
 
-updateProgress();
+const initializeAnalysis = () => {
+  updateProgress();
 
-progressInterval = window.setInterval(
-  increaseProgress,
-  120
-);
+  progressAnimationFrame =
+    requestAnimationFrame(
+      animateWaitingProgress
+    );
 
-checkAnalysisStatus();
+  checkAnalysisStatus();
 
-statusInterval = window.setInterval(
-  checkAnalysisStatus,
-  STATUS_CHECK_INTERVAL
-);
+  statusInterval =
+    window.setInterval(
+      checkAnalysisStatus,
+      STATUS_CHECK_INTERVAL
+    );
+
+  timeoutId =
+    window.setTimeout(
+      handleAnalysisTimeout,
+      MAX_ANALYSIS_TIME
+    );
+};
+
+initializeAnalysis();

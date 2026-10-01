@@ -56,6 +56,8 @@
     longitude: 126.9780
   };
 
+  const PRIORITY_RADIUS = 250;
+
   const decodeShareData = (
     encodedData
   ) => {
@@ -193,6 +195,16 @@
     }
 
     return [];
+  };
+
+  const getBoundaryZone = () => {
+    const searchData =
+      getSearchData();
+
+    return (
+      searchData.boundaryZone ??
+      null
+    );
   };
 
   const getLocation = () => {
@@ -387,22 +399,178 @@
     return "#1E90FF";
   };
 
-  const getPriorityRadius = (
-    priorityRank
+  const getPriorityRadius = () => {
+    return PRIORITY_RADIUS;
+  };
+
+  const getBoundaryFeature = (
+    boundaryZone
   ) => {
-    if (
-      Number(priorityRank) === 1
-    ) {
-      return 150;
+    if (!boundaryZone) {
+      return null;
     }
 
     if (
-      Number(priorityRank) === 2
+      boundaryZone.type ===
+      "Feature" &&
+      boundaryZone.geometry?.type ===
+      "Polygon"
     ) {
-      return 130;
+      return boundaryZone;
     }
 
-    return 120;
+    if (
+      boundaryZone.type ===
+      "FeatureCollection" &&
+      Array.isArray(
+        boundaryZone.features
+      )
+    ) {
+      return (
+        boundaryZone.features.find(
+          (feature) =>
+            feature?.geometry?.type ===
+            "Polygon" &&
+            Array.isArray(
+              feature.geometry
+                .coordinates
+            )
+        ) ?? null
+      );
+    }
+
+    if (
+      boundaryZone.geometry?.type ===
+      "Polygon"
+    ) {
+      return boundaryZone;
+    }
+
+    return null;
+  };
+
+  const getBoundaryPath = (
+    boundaryZone
+  ) => {
+    const feature =
+      getBoundaryFeature(
+        boundaryZone
+      );
+
+    if (!feature) {
+      return [];
+    }
+
+    const coordinates =
+      feature.geometry
+        ?.coordinates?.[0];
+
+    if (
+      !Array.isArray(
+        coordinates
+      )
+    ) {
+      return [];
+    }
+
+    return coordinates
+      .map((coordinate) => {
+        if (
+          !Array.isArray(
+            coordinate
+          ) ||
+          coordinate.length < 2
+        ) {
+          return null;
+        }
+
+        const longitude =
+          Number(
+            coordinate[0]
+          );
+
+        const latitude =
+          Number(
+            coordinate[1]
+          );
+
+        if (
+          !Number.isFinite(
+            latitude
+          ) ||
+          !Number.isFinite(
+            longitude
+          )
+        ) {
+          return null;
+        }
+
+        return new naver.maps.LatLng(
+          latitude,
+          longitude
+        );
+      })
+      .filter(Boolean);
+  };
+
+  const createBoundaryPolygon = (
+    map
+  ) => {
+    const boundaryZone =
+      getBoundaryZone();
+
+    const feature =
+      getBoundaryFeature(
+        boundaryZone
+      );
+
+    if (!feature) {
+      return null;
+    }
+
+    const path =
+      getBoundaryPath(
+        boundaryZone
+      );
+
+    if (path.length < 3) {
+      return null;
+    }
+
+    const properties =
+      feature.properties ?? {};
+
+    const fillColor =
+      properties.fillColor ??
+      properties.fill_color ??
+      "#2563EB";
+
+    const rawFillOpacity =
+      properties.fillOpacity ??
+      properties.fill_opacity ??
+      0.25;
+
+    const parsedFillOpacity =
+      Number(
+        rawFillOpacity
+      );
+
+    const fillOpacity =
+      Number.isFinite(
+        parsedFillOpacity
+      )
+        ? parsedFillOpacity
+        : 0.25;
+
+    return new naver.maps.Polygon({
+      map,
+      paths: [path],
+      strokeColor: "#2563EB",
+      strokeWeight: 2,
+      strokeOpacity: 0.8,
+      fillColor: "#E5E7EB",
+      fillOpacity: 0.35
+    });
   };
 
   const createPriorityCircles = (
@@ -418,10 +586,20 @@
         }
 
         const latitude =
-          Number(place.lat);
+          Number(
+            place.lat ??
+            place.latitude ??
+            place.location?.lat
+          );
 
         const longitude =
-          Number(place.lng);
+          Number(
+            place.lng ??
+            place.lon ??
+            place.longitude ??
+            place.location?.lng ??
+            place.location?.lon
+          );
 
         if (
           !Number.isFinite(
@@ -436,13 +614,12 @@
 
         const color =
           getPriorityColor(
-            place.priorityRank
+            place.priorityRank ??
+            place.rank
           );
 
         const radius =
-          getPriorityRadius(
-            place.priorityRank
-          );
+          getPriorityRadius();
 
         new naver.maps.Circle({
           map,
@@ -458,6 +635,96 @@
           strokeOpacity: 0.5,
           strokeWeight: 1
         });
+      }
+    );
+  };
+
+  const createMapBounds = (
+    map,
+    location
+  ) => {
+    const bounds =
+      new naver.maps.LatLngBounds();
+
+    let hasPoint = false;
+
+    const boundaryPath =
+      getBoundaryPath(
+        getBoundaryZone()
+      );
+
+    boundaryPath.forEach(
+      (point) => {
+        bounds.extend(point);
+        hasPoint = true;
+      }
+    );
+
+    const priorityPlaces =
+      getPriorityPlaces();
+
+    priorityPlaces.forEach(
+      (place) => {
+        if (place.checked) {
+          return;
+        }
+
+        const latitude =
+          Number(
+            place.lat ??
+            place.latitude ??
+            place.location?.lat
+          );
+
+        const longitude =
+          Number(
+            place.lng ??
+            place.lon ??
+            place.longitude ??
+            place.location?.lng ??
+            place.location?.lon
+          );
+
+        if (
+          !Number.isFinite(
+            latitude
+          ) ||
+          !Number.isFinite(
+            longitude
+          )
+        ) {
+          return;
+        }
+
+        bounds.extend(
+          new naver.maps.LatLng(
+            latitude,
+            longitude
+          )
+        );
+
+        hasPoint = true;
+      }
+    );
+
+    if (!hasPoint) {
+      map.setCenter(
+        new naver.maps.LatLng(
+          location.latitude,
+          location.longitude
+        )
+      );
+
+      return;
+    }
+
+    map.fitBounds(
+      bounds,
+      {
+        top: 70,
+        right: 70,
+        bottom: 70,
+        left: 70
       }
     );
   };
@@ -487,8 +754,8 @@
         {
           center,
           zoom: 16,
-          minZoom: 11,
-          maxZoom: 19,
+          minZoom: 7,
+          maxZoom: 21,
           zoomControl: true,
           zoomControlOptions: {
             position:
@@ -512,6 +779,10 @@
         "마지막 확인 위치"
     });
 
+    createBoundaryPolygon(
+      map
+    );
+
     createPriorityCircles(
       map
     );
@@ -523,6 +794,22 @@
             map,
             "resize"
           );
+
+        const boundaryPath =
+          getBoundaryPath(
+            getBoundaryZone()
+          );
+
+        if (
+          boundaryPath.length >= 3
+        ) {
+          createMapBounds(
+            map,
+            location
+          );
+
+          return;
+        }
 
         map.setCenter(
           center
@@ -583,6 +870,7 @@
             String(
               priority
                 .priorityRank ??
+              priority.rank ??
               index + 1
             );
 
@@ -612,10 +900,9 @@
 
           if (address) {
             const addressElement =
-              document
-                .createElement(
-                  "span"
-                );
+              document.createElement(
+                "span"
+              );
 
             addressElement
               .textContent =
@@ -626,7 +913,8 @@
             );
           }
 
-          let checkedElement = null;
+          let checkedElement =
+            null;
 
           if (priority.checked) {
             checkedElement =
@@ -639,7 +927,7 @@
 
             checkedElement.textContent =
               "탐색 완료";
-          };
+          }
 
           item.appendChild(
             rank

@@ -140,11 +140,11 @@
   stroke: none;
 }
 
-.summary-icon-area {
+.summary-icon-progress {
   background-color: #e5faf5;
 }
 
-.summary-icon-area svg {
+.summary-icon-progress svg {
   stroke: #13ae8c;
 }
 
@@ -169,6 +169,16 @@
   line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+#priority-location {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: keep-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .board-map-section {

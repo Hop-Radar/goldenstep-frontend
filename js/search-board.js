@@ -1,6 +1,5 @@
 (() => {
-  const API_BASE_URL =
-    "";
+  const API_BASE_URL = "";
 
   const boardMapElement =
     document.querySelector(
@@ -22,6 +21,16 @@
       "#elapsed-time"
     );
 
+  const priorityLocationElement =
+    document.querySelector(
+      "#priority-location"
+    );
+
+  const searchProgressElement =
+    document.querySelector(
+      "#search-progress"
+    );
+
   const shareMapButton =
     document.querySelector(
       "#share-map-button"
@@ -31,6 +40,7 @@
   let locationMarker = null;
   let isSharing = false;
   let priorityCircles = [];
+  let boundaryPolygon = null;
 
   const getStoredSearchData = () => {
     const storageKeys = [
@@ -120,22 +130,36 @@
     const runId =
       Number(storedRunId);
 
-    if (
-      !Number.isFinite(runId)
-    ) {
+    if (!Number.isFinite(runId)) {
       return null;
     }
 
     return runId;
   };
 
-  const getTimePoint = () => {
+  const getSelectedMinutes = () => {
     const selectedMinutes =
       Number(
         sessionStorage.getItem(
           "goldenStepSelectedMinutes"
         )
       );
+
+    if (
+      selectedMinutes === 30 ||
+      selectedMinutes === 60 ||
+      selectedMinutes === 180 ||
+      selectedMinutes === 360
+    ) {
+      return selectedMinutes;
+    }
+
+    return 0;
+  };
+
+  const getTimePoint = () => {
+    const selectedMinutes =
+      getSelectedMinutes();
 
     if (selectedMinutes === 30) {
       return "AFTER_30M";
@@ -164,6 +188,7 @@
         console.error(
           "분석 runId를 찾을 수 없습니다."
         );
+
         return null;
       }
 
@@ -244,8 +269,19 @@
     const timeResult =
       await fetchTimeResult();
 
+    const selectedMinutes =
+      getSelectedMinutes();
+
+    const timePoint =
+      getTimePoint();
+
     const shareData = {
       ...searchData,
+      selectedMinutes,
+      timePoint,
+      boundaryZone:
+        timeResult?.boundaryZone ??
+        null,
       priorityPlaces:
         Array.isArray(
           timeResult?.places
@@ -516,22 +552,8 @@
     return "#1E90FF";
   };
 
-  const getPriorityRadius = (
-    priorityRank
-  ) => {
-    if (
-      Number(priorityRank) === 1
-    ) {
-      return 150;
-    }
-
-    if (
-      Number(priorityRank) === 2
-    ) {
-      return 130;
-    }
-
-    return 120;
+  const getPriorityRadius = () => {
+    return 250;
   };
 
   const clearPriorityCircles =
@@ -544,6 +566,170 @@
 
       priorityCircles = [];
     };
+
+  const clearBoundaryPolygon =
+    () => {
+      if (!boundaryPolygon) {
+        return;
+      }
+
+      boundaryPolygon.setMap(
+        null
+      );
+
+      boundaryPolygon = null;
+    };
+
+  const getBoundaryFeature = (
+    boundaryZone
+  ) => {
+    if (
+      !boundaryZone ||
+      !Array.isArray(
+        boundaryZone.features
+      )
+    ) {
+      return null;
+    }
+
+    return (
+      boundaryZone.features.find(
+        (feature) =>
+          feature?.geometry?.type ===
+          "Polygon" &&
+          Array.isArray(
+            feature.geometry
+              .coordinates
+          )
+      ) || null
+    );
+  };
+
+  const getBoundaryPath = (
+    boundaryZone
+  ) => {
+    const feature =
+      getBoundaryFeature(
+        boundaryZone
+      );
+
+    if (!feature) {
+      return [];
+    }
+
+    const coordinates =
+      feature.geometry
+        .coordinates?.[0];
+
+    if (
+      !Array.isArray(
+        coordinates
+      )
+    ) {
+      return [];
+    }
+
+    return coordinates
+      .map((coordinate) => {
+        if (
+          !Array.isArray(
+            coordinate
+          ) ||
+          coordinate.length < 2
+        ) {
+          return null;
+        }
+
+        const longitude =
+          Number(
+            coordinate[0]
+          );
+
+        const latitude =
+          Number(
+            coordinate[1]
+          );
+
+        if (
+          !Number.isFinite(
+            latitude
+          ) ||
+          !Number.isFinite(
+            longitude
+          )
+        ) {
+          return null;
+        }
+
+        return new naver.maps
+          .LatLng(
+            latitude,
+            longitude
+          );
+      })
+      .filter(Boolean);
+  };
+
+  const createBoundaryPolygon = (
+    timeResult
+  ) => {
+    if (
+      !boardMap ||
+      !timeResult
+    ) {
+      return;
+    }
+
+    clearBoundaryPolygon();
+
+    const boundaryZone =
+      timeResult.boundaryZone;
+
+    const feature =
+      getBoundaryFeature(
+        boundaryZone
+      );
+
+    if (!feature) {
+      return;
+    }
+
+    const path =
+      getBoundaryPath(
+        boundaryZone
+      );
+
+    if (path.length < 3) {
+      return;
+    }
+
+    const properties =
+      feature.properties || {};
+
+    const fillColor =
+      properties.fillColor ||
+      properties.fill_color ||
+      "#2563EB";
+
+    const rawFillOpacity =
+      properties.fillOpacity ??
+      properties.fill_opacity ??
+      0.25;
+
+    const fillOpacity =
+      Number(rawFillOpacity);
+
+    boundaryPolygon =
+      new naver.maps.Polygon({
+        map: boardMap,
+        paths: [path],
+        strokeColor: "#2563EB",
+        strokeWeight: 2,
+        strokeOpacity: 0.8,
+        fillColor: "#E5E7EB",
+        fillOpacity: 0.35
+      });
+  };
 
   const createPriorityCircles = (
     timeResult
@@ -589,9 +775,7 @@
           );
 
         const radius =
-          getPriorityRadius(
-            place.priorityRank
-          );
+          getPriorityRadius();
 
         const circle =
           new naver.maps.Circle({
@@ -704,6 +888,14 @@
         await fetchTimeResult();
 
       if (timeResult) {
+        updateSearchSummary(
+          timeResult
+        );
+
+        createBoundaryPolygon(
+          timeResult
+        );
+
         createPriorityCircles(
           timeResult
         );
@@ -724,6 +916,78 @@
         100
       );
     };
+
+  const updateSearchSummary = (
+    timeResult
+  ) => {
+    if (
+      !timeResult ||
+      !Array.isArray(
+        timeResult.places
+      )
+    ) {
+      if (
+        priorityLocationElement
+      ) {
+        priorityLocationElement
+          .textContent =
+          "분석 결과 없음";
+      }
+
+      if (
+        searchProgressElement
+      ) {
+        searchProgressElement
+          .textContent =
+          "0 / 0곳 완료";
+      }
+
+      return;
+    }
+
+    const places =
+      timeResult.places;
+
+    const completedPlaces =
+      places.filter(
+        (place) =>
+          place.checked === true
+      );
+
+    const remainingPlaces =
+      places
+        .filter(
+          (place) =>
+            place.checked !== true
+        )
+        .sort(
+          (a, b) =>
+            Number(
+              a.priorityRank
+            ) -
+            Number(
+              b.priorityRank
+            )
+        );
+
+    if (
+      priorityLocationElement
+    ) {
+      priorityLocationElement
+        .textContent =
+        remainingPlaces.length > 0
+          ? remainingPlaces[0].name
+          : "모든 지역 확인 완료";
+    }
+
+    if (
+      searchProgressElement
+    ) {
+      searchProgressElement
+        .textContent =
+        `${completedPlaces.length} / ${places.length}곳 완료`;
+    }
+  };
 
   const calculateElapsedTime =
     () => {

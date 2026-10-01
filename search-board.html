@@ -32,7 +32,7 @@
         </span>
         <h1>탐색보드</h1>
         <p>
-          경과 시간, 우선 확인 지역, 예상 이동 반경을 한 화면에서 확인할 수 있습니다.
+          경과 시간, 우선 확인 지역, 탐색 진행 현황을 한 화면에서 확인할 수 있습니다.
         </p>
       </div>
       <section class="summary-grid" aria-label="탐색 요약 정보">
@@ -69,26 +69,18 @@
           </div>
         </article>
         <article class="summary-card">
-          <div class="summary-icon summary-icon-area">
+          <div class="summary-icon summary-icon-progress">
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="7"></circle>
-              <circle cx="12" cy="12" r="2"></circle>
-              <path d="M12 5V3"></path>
-              <path d="M12 21V19"></path>
-              <path d="M5 12H3"></path>
-              <path d="M21 12H19"></path>
+              <circle cx="12" cy="12" r="8"></circle>
+              <path d="M8.5 12L11 14.5L15.5 9.5"></path>
             </svg>
           </div>
           <div class="summary-content">
             <span class="summary-title">
-              예상 이동 반경
+              탐색 진행 현황
             </span>
-            <strong>
-              약
-              <span id="reachable-radius">
-                3.5
-              </span>
-              km
+            <strong id="search-progress">
+              0 / 3곳 완료
             </strong>
           </div>
         </article>
