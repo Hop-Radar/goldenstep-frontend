@@ -1,0 +1,37 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  validate:
+    name: Validate Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate HTML
+        run: npx --yes html-validate "*.html"
+
+      - name: Validate CSS
+        run: npx --yes stylelint "css/**/*.css"
+
+      - name: Validate JavaScript
+        run: |
+          for file in js/*.js; do
+            node --check "$file"
+          done
