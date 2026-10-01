@@ -172,57 +172,99 @@
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
+  gap: 16px;
+  min-height: 82px;
+  padding: 18px 22px;
   border-bottom: 1px solid #edf2f7;
+  background-color: #ffffff;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .share-priority-item:last-child {
   border-bottom: 0;
 }
 
+.share-priority-item.is-checked {
+  background-color: #f5f9ff;
+}
+
 .share-priority-rank {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background-color: #eaf4ff;
   color: #1479ed;
   font-size: 15px;
   font-weight: 700;
 }
 
-.share-priority-info {
+.share-priority-item.is-checked .share-priority-rank {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.share-priority-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
 }
 
-.share-priority-info strong {
+.share-priority-content strong {
   overflow: hidden;
   color: #17345f;
   font-size: 15px;
   font-weight: 700;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.share-priority-info span {
+.share-priority-content>span:not(.share-priority-checked) {
+  overflow: hidden;
   color: #7b8ba0;
   font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.share-priority-distance {
-  padding: 8px 12px;
-  border-radius: 8px;
-  background-color: #eef7ff;
-  color: #1479ed;
-  font-size: 13px;
+.share-priority-checked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 7px 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1;
   white-space: nowrap;
+  justify-self: end;
+}
+
+.share-priority-checked::before {
+  content: "✓";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .share-actions {

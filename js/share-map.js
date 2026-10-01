@@ -626,25 +626,20 @@
             );
           }
 
-          if (priority.checked) {
-            const checkedElement =
-              document
-                .createElement(
-                  "span"
-                );
+          let checkedElement = null;
 
-            checkedElement
-              .className =
+          if (priority.checked) {
+            checkedElement =
+              document.createElement(
+                "span"
+              );
+
+            checkedElement.className =
               "share-priority-checked";
 
-            checkedElement
-              .textContent =
+            checkedElement.textContent =
               "탐색 완료";
-
-            content.appendChild(
-              checkedElement
-            );
-          }
+          };
 
           item.appendChild(
             rank
@@ -653,6 +648,12 @@
           item.appendChild(
             content
           );
+
+          if (checkedElement) {
+            item.appendChild(
+              checkedElement
+            );
+          }
 
           priorityList
             .appendChild(
