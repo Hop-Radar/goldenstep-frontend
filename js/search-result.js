@@ -1421,8 +1421,7 @@
       }
 
       const appKey =
-        window.TMAP_CONFIG &&
-        window.TMAP_CONFIG.appKey;
+        window.ENV?.TMAP_APP_KEY;
 
       if (!appKey) {
         alert(
