@@ -8,7 +8,7 @@ const STATUS_CHECK_INTERVAL = 1000;
 const MAX_ANALYSIS_TIME = 120000;
 const WAITING_PROGRESS_DURATION = 60000;
 const MAX_WAITING_PROGRESS = 92;
-const COMPLETION_DURATION = 600;
+const COMPLETION_DURATION = 1200;
 const COMPLETION_DELAY = 500;
 
 let progress = 0;
@@ -117,7 +117,8 @@ const updateSteps = () => {
 const updateProgress = () => {
   const displayProgress = Math.floor(progress);
 
-  progressBar.style.width = `${progress}%`;
+  progressBar.style.width =
+    `${displayProgress}%`;
   progressValue.textContent = `${displayProgress}%`;
 
   progressTrack.setAttribute(
@@ -228,12 +229,9 @@ const finishProgress = () => {
       1
     );
 
-    const easedRatio =
-      1 - Math.pow(1 - ratio, 3);
-
     progress =
       startProgress +
-      (100 - startProgress) * easedRatio;
+      (100 - startProgress) * ratio;
 
     if (ratio >= 1) {
       progress = 100;
