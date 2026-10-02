@@ -3291,7 +3291,17 @@
       currentSearchSession =
         await fetchSearchSession();
 
-      initializeMap();
+      try {
+        await window.naverMapsReady;
+        initializeMap();
+      } catch (error) {
+        console.error(
+          "네이버 지도 초기화 실패:",
+          error
+        );
+
+        return;
+      }
 
       await initializeCurrentResult();
     };

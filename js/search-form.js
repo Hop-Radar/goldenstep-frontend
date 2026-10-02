@@ -2012,7 +2012,23 @@ const handleSearchFormSubmit = async (
 initializeTimeOptions();
 initializeAgeOptions();
 initializeLastSeenDate();
-initializeMap();
+
+if (window.naverMapsReady) {
+  window.naverMapsReady
+    .then(() => {
+      initializeMap();
+    })
+    .catch((error) => {
+      console.error(
+        "네이버 지도 초기화 실패:",
+        error
+      );
+    });
+} else {
+  console.error(
+    "네이버 지도 로더를 찾을 수 없습니다."
+  );
+}
 
 if (locationSearchButton) {
   locationSearchButton.addEventListener(
