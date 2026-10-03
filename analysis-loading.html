@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>탐색 분석 중 | Golden Step</title>
+  <link rel="icon" type="image/png" href="./assets/icons/favicon.png">
+  <link rel="stylesheet" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./css/analysis-loading.css">
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="header-logo" href="./index.html">
+        <img src="./assets/images/golden-step-logo.png" alt="Golden Step">
+      </a>
+
+      <button class="emergency-button" type="button" aria-label="112 긴급 신고"></button>
+    </div>
+  </header>
+
+  <main class="analysis-page">
+    <section class="analysis-card">
+      <div class="analysis-hero">
+        <div class="analysis-map" aria-hidden="true">
+          <svg viewBox="0 0 240 150">
+            <g class="map-paper">
+              <path class="map-panel map-panel-left" d="M35 73 L91 57 L91 121 L38 136 Z"></path>
+
+              <path class="map-panel map-panel-center" d="M91 57 L145 72 L145 135 L91 121 Z"></path>
+
+              <path class="map-panel map-panel-right" d="M145 72 L202 55 L199 119 L145 135 Z"></path>
+            </g>
+
+            <circle class="map-dot" cx="35" cy="37" r="4"></circle>
+
+            <circle class="map-dot" cx="203" cy="35" r="5"></circle>
+
+            <circle class="map-dot map-dot-small" cx="219" cy="78" r="3"></circle>
+
+            <g class="location-pin">
+              <ellipse class="pin-shadow" cx="120" cy="105" rx="15" ry="4"></ellipse>
+
+              <path class="pin-body"
+                d="M120 17C102 17 88 31 88 49C88 72 120 105 120 105C120 105 152 72 152 49C152 31 138 17 120 17Z"></path>
+
+              <circle class="pin-center" cx="120" cy="49" r="10"></circle>
+            </g>
+          </svg>
+        </div>
+
+        <h1 class="analysis-title">
+          탐색 <strong>중입니다</strong>
+        </h1>
+
+        <p class="analysis-description">
+          입력하신 정보를 바탕으로 탐색 우선 지역을 분석하고 있습니다.
+        </p>
+      </div>
+
+      <div class="analysis-progress">
+        <div class="progress-track" role="progressbar" aria-label="탐색 분석 진행률" aria-valuemin="0" aria-valuemax="100"
+          aria-valuenow="0">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <strong class="progress-value" id="progress-value">
+          0%
+        </strong>
+      </div>
+
+      <div class="analysis-steps">
+        <div class="analysis-step is-active" data-step="1">
+          <div class="step-icon">
+            <span class="step-check">✓</span>
+          </div>
+
+          <p>입력한 탐색 정보를 확인하고 있습니다.</p>
+        </div>
+
+        <div class="analysis-step" data-step="2">
+          <div class="step-icon"></div>
+
+          <p>탐색에 필요한 정보를 분석하고 있습니다.</p>
+        </div>
+
+        <div class="analysis-step" data-step="3">
+          <div class="step-icon"></div>
+
+          <p>우선 확인 지역을 분석하고 있습니다.</p>
+        </div>
+
+        <div class="analysis-step" data-step="4">
+          <div class="step-icon"></div>
+
+          <p>탐색 결과를 준비하고 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="analysis-notice">
+        <div class="notice-bulb" aria-hidden="true">
+          <span class="bulb-glow"></span>
+
+          <svg viewBox="0 0 48 48">
+            <g class="bulb-rays">
+              <path d="M24 2V8"></path>
+              <path d="M8.5 8.5L13 13"></path>
+              <path d="M39.5 8.5L35 13"></path>
+              <path d="M2 24H8"></path>
+              <path d="M40 24H46"></path>
+            </g>
+
+            <path class="bulb-body"
+              d="M14 23C14 17.5 18.5 13 24 13C29.5 13 34 17.5 34 23C34 27 31.8 29.7 29.5 31.8C28.3 32.9 28 34.2 28 35.5H20C20 34.2 19.7 32.9 18.5 31.8C16.2 29.7 14 27 14 23Z">
+            </path>
+
+            <path class="bulb-base" d="M20 39H28"></path>
+            <path class="bulb-base" d="M21.5 43H26.5"></path>
+          </svg>
+        </div>
+
+        <div class="notice-content">
+          <strong>잠시만 기다려주세요!</strong>
+
+          <p>
+            입력된 탐색 정보를 바탕으로 우선 확인 지역을 분석하고 있습니다.<br>
+            분석이 완료되면 탐색 결과 화면으로 자동 이동합니다.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/analysis-loading.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,402 @@
+.analysis-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 64px);
+  padding: 28px 20px;
+  background:
+    linear-gradient(rgb(255 255 255 / 40%),
+      rgb(255 255 255 / 40%)),
+    url("../assets/images/main-hero-map.png") center / cover no-repeat;
+}
+
+.analysis-card {
+  width: min(100%, 620px);
+  padding: 32px 42px 30px;
+  border: 1px solid rgb(219 228 239 / 90%);
+  border-radius: 14px;
+  background-color: rgb(255 255 255 / 96%);
+  box-shadow: 0 12px 36px rgb(15 39 72 / 16%);
+  backdrop-filter: blur(8px);
+}
+
+.analysis-hero {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.analysis-map {
+  width: 240px;
+  height: 150px;
+}
+
+.analysis-map svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.map-paper {
+  filter: drop-shadow(0 6px 7px rgb(37 99 235 / 10%));
+}
+
+.map-panel {
+  stroke: #9bc9ff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.map-panel-left {
+  fill: #eaf4ff;
+}
+
+.map-panel-center {
+  fill: #dbeafe;
+}
+
+.map-panel-right {
+  fill: #edf6ff;
+}
+
+.map-dot {
+  fill: #2693ff;
+}
+
+.map-dot-small {
+  opacity: 0.9;
+}
+
+.location-pin {
+  animation: pin-float 1.8s ease-in-out infinite;
+  transform-origin: 120px 55px;
+}
+
+.pin-body {
+  fill: #2689f5;
+  filter: drop-shadow(0 6px 5px rgb(37 99 235 / 20%));
+}
+
+.pin-center {
+  fill: #ffffff;
+}
+
+.pin-shadow {
+  fill: rgb(37 99 235 / 14%);
+  filter: blur(2px);
+}
+
+.analysis-title {
+  margin-top: 4px;
+  color: #142d52;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+}
+
+.analysis-title strong {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.analysis-description {
+  margin-top: 8px;
+  color: #71839b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.analysis-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: #e6ebf1;
+}
+
+.progress-bar {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,
+      #3ba3ff 0%,
+      #2563eb 100%);
+}
+
+.progress-value {
+  width: 42px;
+  flex-shrink: 0;
+  color: #17345f;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.analysis-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.analysis-step {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background-color: #ffffff;
+  color: #6f8097;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.analysis-step p {
+  margin-left: 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+}
+
+.analysis-step.is-active {
+  border-color: #d7e9ff;
+  background-color: #eaf4ff;
+  color: #2563eb;
+}
+
+.analysis-step.is-active .step-icon {
+  border-color: #2689f5;
+  background-color: #2689f5;
+}
+
+.analysis-step.is-processing {
+  border-color: #d7e9ff;
+  background-color: #f2f8ff;
+  color: #3574bc;
+}
+
+.analysis-step.is-processing .step-icon {
+  border-color: transparent;
+}
+
+.analysis-step.is-complete {
+  border-color: #d7e9ff;
+  background-color: #eaf4ff;
+  color: #2563eb;
+}
+
+.analysis-step.is-complete .step-icon {
+  border-color: #2689f5;
+  background-color: #2689f5;
+}
+
+.step-check {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.step-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px dotted #2689f5;
+  border-radius: 50%;
+  animation: spinner-rotate 1.1s linear infinite;
+}
+
+.analysis-notice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 17px 20px;
+  border: 1px solid #d9e9fa;
+  border-radius: 8px;
+  background-color: #edf7ff;
+}
+
+.notice-bulb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+
+.notice-bulb svg {
+  position: relative;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+  fill: none;
+  stroke: #2689f5;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bulb-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgb(38 137 245 / 12%);
+  box-shadow:
+    0 0 10px rgb(38 137 245 / 20%),
+    0 0 20px rgb(38 137 245 / 12%);
+  transform: translate(-50%, -50%);
+  animation: bulb-glow 1.8s ease-in-out infinite;
+}
+
+.bulb-rays {
+  transform-origin: 24px 24px;
+  animation: bulb-rays 1.8s ease-in-out infinite;
+}
+
+.bulb-body,
+.bulb-base {
+  stroke-width: 2.3;
+}
+
+.notice-content {
+  min-width: 0;
+}
+
+.notice-content strong {
+  color: #17345f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.notice-content p {
+  margin-top: 5px;
+  color: #6f8097;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@keyframes pin-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bulb-glow {
+
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+@keyframes bulb-rays {
+
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .analysis-page {
+    align-items: flex-start;
+    padding: 20px 16px;
+  }
+
+  .analysis-card {
+    padding: 28px 22px 24px;
+  }
+
+  .analysis-map {
+    width: 210px;
+    height: 135px;
+  }
+
+  .analysis-title {
+    font-size: 24px;
+  }
+
+  .analysis-description {
+    font-size: 11px;
+  }
+
+  .analysis-step {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  .analysis-step p {
+    margin-left: 11px;
+    font-size: 12px;
+  }
+
+  .analysis-notice {
+    padding: 15px;
+  }
+
+  .notice-content p br {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .analysis-page {
+    min-height: calc(100vh - 76px);
+  }
+}

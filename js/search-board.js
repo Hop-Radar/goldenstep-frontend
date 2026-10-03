@@ -1,0 +1,1147 @@
+(() => {
+  const API_BASE_URL = "";
+
+  const boardMapElement =
+    document.querySelector(
+      "#board-map"
+    );
+
+  const resultButton =
+    document.querySelector(
+      "#result-button"
+    );
+
+  const newSearchButton =
+    document.querySelector(
+      "#new-search-button"
+    );
+
+  const elapsedTimeElement =
+    document.querySelector(
+      "#elapsed-time"
+    );
+
+  const priorityLocationElement =
+    document.querySelector(
+      "#priority-location"
+    );
+
+  const searchProgressElement =
+    document.querySelector(
+      "#search-progress"
+    );
+
+  const shareMapButton =
+    document.querySelector(
+      "#share-map-button"
+    );
+
+  let boardMap = null;
+  let locationMarker = null;
+  let isSharing = false;
+  let priorityCircles = [];
+  let boundaryPolygon = null;
+
+  const getStoredSearchData = () => {
+    const storageKeys = [
+      "goldenStepSearchData",
+      "searchData",
+      "searchFormData"
+    ];
+
+    for (const key of storageKeys) {
+      const storedValue =
+        sessionStorage.getItem(key);
+
+      if (!storedValue) {
+        continue;
+      }
+
+      try {
+        const parsedValue =
+          JSON.parse(storedValue);
+
+        if (parsedValue) {
+          return parsedValue;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return {};
+  };
+
+  const getStoredCoordinate = () => {
+    const searchData =
+      getStoredSearchData();
+
+    const latitude = Number(
+      searchData.latitude ??
+      searchData.lat ??
+      searchData.lastLocationLat ??
+      sessionStorage.getItem(
+        "latitude"
+      ) ??
+      sessionStorage.getItem(
+        "lastLocationLat"
+      )
+    );
+
+    const longitude = Number(
+      searchData.longitude ??
+      searchData.lng ??
+      searchData.lastLocationLng ??
+      sessionStorage.getItem(
+        "longitude"
+      ) ??
+      sessionStorage.getItem(
+        "lastLocationLng"
+      )
+    );
+
+    if (
+      Number.isFinite(latitude) &&
+      Number.isFinite(longitude) &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180
+    ) {
+      return {
+        latitude,
+        longitude
+      };
+    }
+
+    return null;
+  };
+
+  const getRunId = () => {
+    const storedRunId =
+      sessionStorage.getItem(
+        "goldenStepRunId"
+      );
+
+    if (!storedRunId) {
+      return null;
+    }
+
+    const runId =
+      Number(storedRunId);
+
+    if (!Number.isFinite(runId)) {
+      return null;
+    }
+
+    return runId;
+  };
+
+  const getSelectedMinutes = () => {
+    const selectedMinutes =
+      Number(
+        sessionStorage.getItem(
+          "goldenStepSelectedMinutes"
+        )
+      );
+
+    if (
+      selectedMinutes === 30 ||
+      selectedMinutes === 60 ||
+      selectedMinutes === 180 ||
+      selectedMinutes === 360
+    ) {
+      return selectedMinutes;
+    }
+
+    return 0;
+  };
+
+  const getTimePoint = () => {
+    const selectedMinutes =
+      getSelectedMinutes();
+
+    if (selectedMinutes === 30) {
+      return "AFTER_30M";
+    }
+
+    if (selectedMinutes === 60) {
+      return "AFTER_1H";
+    }
+
+    if (selectedMinutes === 180) {
+      return "AFTER_3H";
+    }
+
+    if (selectedMinutes === 360) {
+      return "AFTER_6H";
+    }
+
+    return "NOW";
+  };
+
+  const fetchTimeResult =
+    async () => {
+      const runId = getRunId();
+
+      if (!runId) {
+        console.error(
+          "분석 runId를 찾을 수 없습니다."
+        );
+
+        return null;
+      }
+
+      const timePoint =
+        getTimePoint();
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/search/analysis/${runId}/results/${timePoint}`,
+            {
+              method: "GET",
+              credentials: "include"
+            }
+          );
+
+        let responseData = null;
+
+        try {
+          responseData =
+            await response.json();
+        } catch {
+          responseData = null;
+        }
+
+        if (!response.ok) {
+          console.error(
+            "탐색보드 분석 결과 조회 실패:",
+            response.status,
+            responseData
+          );
+
+          return null;
+        }
+
+        return responseData;
+      } catch (error) {
+        console.error(
+          "탐색보드 분석 결과 요청 오류:",
+          error
+        );
+
+        return null;
+      }
+    };
+
+  const encodeShareData = (
+    data
+  ) => {
+    const json =
+      JSON.stringify(data);
+
+    const bytes =
+      new TextEncoder().encode(
+        json
+      );
+
+    let binary = "";
+
+    bytes.forEach((byte) => {
+      binary +=
+        String.fromCharCode(byte);
+    });
+
+    return btoa(binary)
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .replaceAll("=", "");
+  };
+
+  const createShareUrl = async () => {
+    const searchData =
+      getStoredSearchData();
+
+    const storedCoordinate =
+      getStoredCoordinate();
+
+    const timeResult =
+      await fetchTimeResult();
+
+    const selectedMinutes =
+      getSelectedMinutes();
+
+    const timePoint =
+      getTimePoint();
+
+    const shareData = {
+      ...searchData,
+      selectedMinutes,
+      timePoint,
+      boundaryZone:
+        timeResult?.boundaryZone ??
+        null,
+      priorityPlaces:
+        Array.isArray(
+          timeResult?.places
+        )
+          ? timeResult.places
+          : []
+    };
+
+    if (storedCoordinate) {
+      shareData.latitude =
+        storedCoordinate.latitude;
+
+      shareData.longitude =
+        storedCoordinate.longitude;
+    }
+
+    const encodedData =
+      encodeShareData(shareData);
+
+    const shareUrl =
+      new URL(
+        "./share-map.html",
+        window.location.href
+      );
+
+    shareUrl.searchParams.set(
+      "data",
+      encodedData
+    );
+
+    return shareUrl.toString();
+  };
+
+  const copyText = async (
+    text
+  ) => {
+    if (
+      navigator.clipboard &&
+      window.isSecureContext
+    ) {
+      await navigator.clipboard
+        .writeText(text);
+
+      return;
+    }
+
+    const textArea =
+      document.createElement(
+        "textarea"
+      );
+
+    textArea.value = text;
+
+    textArea.setAttribute(
+      "readonly",
+      ""
+    );
+
+    textArea.style.position =
+      "fixed";
+
+    textArea.style.left =
+      "-9999px";
+
+    textArea.style.opacity =
+      "0";
+
+    document.body.appendChild(
+      textArea
+    );
+
+    textArea.select();
+
+    const copied =
+      document.execCommand(
+        "copy"
+      );
+
+    textArea.remove();
+
+    if (!copied) {
+      throw new Error(
+        "Clipboard copy failed"
+      );
+    }
+  };
+
+  const showShareToast = (
+    message,
+    isError = false
+  ) => {
+    const previousToast =
+      document.querySelector(
+        ".share-copy-toast"
+      );
+
+    if (previousToast) {
+      previousToast.remove();
+    }
+
+    const toast =
+      document.createElement(
+        "div"
+      );
+
+    toast.className =
+      "share-copy-toast";
+
+    toast.setAttribute(
+      "role",
+      "status"
+    );
+
+    toast.setAttribute(
+      "aria-live",
+      "polite"
+    );
+
+    const icon =
+      document.createElement(
+        "span"
+      );
+
+    icon.textContent =
+      isError ? "!" : "✓";
+
+    const text =
+      document.createElement(
+        "span"
+      );
+
+    text.textContent =
+      message;
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+
+    Object.assign(
+      toast.style,
+      {
+        position: "fixed",
+        left: "50%",
+        bottom: "40px",
+        zIndex: "99999",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "12px 18px",
+        borderRadius: "10px",
+        backgroundColor:
+          isError
+            ? "#7f1d1d"
+            : "#0f172a",
+        color: "#ffffff",
+        fontFamily:
+          '"Pretendard", sans-serif',
+        fontSize: "14px",
+        fontWeight: "600",
+        lineHeight: "1.4",
+        whiteSpace: "nowrap",
+        boxShadow:
+          "0 8px 24px rgb(15 23 42 / 24%)",
+        transform:
+          "translateX(-50%)",
+        opacity: "0",
+        transition:
+          "opacity 160ms ease, bottom 160ms ease"
+      }
+    );
+
+    document.body.appendChild(
+      toast
+    );
+
+    requestAnimationFrame(
+      () => {
+        toast.style.opacity =
+          "1";
+
+        toast.style.bottom =
+          "48px";
+      }
+    );
+
+    return toast;
+  };
+
+  const handleShareMapClick =
+    async () => {
+      if (isSharing) {
+        return;
+      }
+
+      isSharing = true;
+
+      const shareUrl =
+        await createShareUrl();
+
+      try {
+        await copyText(
+          shareUrl
+        );
+
+        showShareToast(
+          "공유 링크가 복사되었습니다."
+        );
+
+        window.setTimeout(
+          () => {
+            window.location.href =
+              shareUrl;
+          },
+          900
+        );
+      } catch (error) {
+        console.error(
+          "Share link copy error:",
+          error
+        );
+
+        showShareToast(
+          "링크 복사에 실패했습니다. 공유 화면으로 이동합니다.",
+          true
+        );
+
+        window.setTimeout(
+          () => {
+            window.location.href =
+              shareUrl;
+          },
+          1200
+        );
+      }
+    };
+
+  const createMarkerIcon = () => {
+    return {
+      content: `
+        <div class="board-location-marker">
+          <div class="board-location-marker-pin">
+            <span></span>
+          </div>
+        </div>
+      `,
+      anchor:
+        new naver.maps.Point(
+          20,
+          42
+        )
+    };
+  };
+
+  const getPriorityColor = (
+    priorityRank
+  ) => {
+    if (
+      Number(priorityRank) === 1
+    ) {
+      return "#EF4444";
+    }
+
+    if (
+      Number(priorityRank) === 2
+    ) {
+      return "#FFB000";
+    }
+
+    return "#1E90FF";
+  };
+
+  const getPriorityRadius = () => {
+    return 250;
+  };
+
+  const clearPriorityCircles =
+    () => {
+      priorityCircles.forEach(
+        (circle) => {
+          circle.setMap(null);
+        }
+      );
+
+      priorityCircles = [];
+    };
+
+  const clearBoundaryPolygon =
+    () => {
+      if (!boundaryPolygon) {
+        return;
+      }
+
+      boundaryPolygon.setMap(
+        null
+      );
+
+      boundaryPolygon = null;
+    };
+
+  const getBoundaryFeature = (
+    boundaryZone
+  ) => {
+    if (
+      !boundaryZone ||
+      !Array.isArray(
+        boundaryZone.features
+      )
+    ) {
+      return null;
+    }
+
+    return (
+      boundaryZone.features.find(
+        (feature) =>
+          feature?.geometry?.type ===
+          "Polygon" &&
+          Array.isArray(
+            feature.geometry
+              .coordinates
+          )
+      ) || null
+    );
+  };
+
+  const getBoundaryPath = (
+    boundaryZone
+  ) => {
+    const feature =
+      getBoundaryFeature(
+        boundaryZone
+      );
+
+    if (!feature) {
+      return [];
+    }
+
+    const coordinates =
+      feature.geometry
+        .coordinates?.[0];
+
+    if (
+      !Array.isArray(
+        coordinates
+      )
+    ) {
+      return [];
+    }
+
+    return coordinates
+      .map((coordinate) => {
+        if (
+          !Array.isArray(
+            coordinate
+          ) ||
+          coordinate.length < 2
+        ) {
+          return null;
+        }
+
+        const longitude =
+          Number(
+            coordinate[0]
+          );
+
+        const latitude =
+          Number(
+            coordinate[1]
+          );
+
+        if (
+          !Number.isFinite(
+            latitude
+          ) ||
+          !Number.isFinite(
+            longitude
+          )
+        ) {
+          return null;
+        }
+
+        return new naver.maps
+          .LatLng(
+            latitude,
+            longitude
+          );
+      })
+      .filter(Boolean);
+  };
+
+  const createBoundaryPolygon = (
+    timeResult
+  ) => {
+    if (
+      !boardMap ||
+      !timeResult
+    ) {
+      return;
+    }
+
+    clearBoundaryPolygon();
+
+    const boundaryZone =
+      timeResult.boundaryZone;
+
+    const feature =
+      getBoundaryFeature(
+        boundaryZone
+      );
+
+    if (!feature) {
+      return;
+    }
+
+    const path =
+      getBoundaryPath(
+        boundaryZone
+      );
+
+    if (path.length < 3) {
+      return;
+    }
+
+    const properties =
+      feature.properties || {};
+
+    const fillColor =
+      properties.fillColor ||
+      properties.fill_color ||
+      "#2563EB";
+
+    const rawFillOpacity =
+      properties.fillOpacity ??
+      properties.fill_opacity ??
+      0.25;
+
+    const fillOpacity =
+      Number(rawFillOpacity);
+
+    boundaryPolygon =
+      new naver.maps.Polygon({
+        map: boardMap,
+        paths: [path],
+        strokeColor: "#2563EB",
+        strokeWeight: 2,
+        strokeOpacity: 0.8,
+        fillColor: "#E5E7EB",
+        fillOpacity: 0.35
+      });
+  };
+
+  const createPriorityCircles = (
+    timeResult
+  ) => {
+    if (
+      !boardMap ||
+      !timeResult ||
+      !Array.isArray(
+        timeResult.places
+      )
+    ) {
+      return;
+    }
+
+    clearPriorityCircles();
+
+    timeResult.places.forEach(
+      (place) => {
+        if (place.checked) {
+          return;
+        }
+
+        const latitude =
+          Number(place.lat);
+
+        const longitude =
+          Number(place.lng);
+
+        if (
+          !Number.isFinite(
+            latitude
+          ) ||
+          !Number.isFinite(
+            longitude
+          )
+        ) {
+          return;
+        }
+
+        const color =
+          getPriorityColor(
+            place.priorityRank
+          );
+
+        const radius =
+          getPriorityRadius();
+
+        const circle =
+          new naver.maps.Circle({
+            map: boardMap,
+            center:
+              new naver.maps.LatLng(
+                latitude,
+                longitude
+              ),
+            radius,
+            fillColor: color,
+            fillOpacity: 0.22,
+            strokeColor: color,
+            strokeOpacity: 0.5,
+            strokeWeight: 1
+          });
+
+        priorityCircles.push(
+          circle
+        );
+      }
+    );
+  };
+
+  const initializeBoardMap =
+    async () => {
+      if (!boardMapElement) {
+        return;
+      }
+
+      if (
+        typeof naver ===
+        "undefined" ||
+        !naver.maps
+      ) {
+        return;
+      }
+
+      const storedCoordinate =
+        getStoredCoordinate();
+
+      const defaultLatitude =
+        37.5665;
+
+      const defaultLongitude =
+        126.9780;
+
+      const latitude =
+        storedCoordinate
+          ? storedCoordinate
+            .latitude
+          : defaultLatitude;
+
+      const longitude =
+        storedCoordinate
+          ? storedCoordinate
+            .longitude
+          : defaultLongitude;
+
+      const centerPosition =
+        new naver.maps.LatLng(
+          latitude,
+          longitude
+        );
+
+      boardMap =
+        new naver.maps.Map(
+          boardMapElement,
+          {
+            center:
+              centerPosition,
+            zoom:
+              storedCoordinate
+                ? 17
+                : 14,
+            minZoom: 7,
+            maxZoom: 21,
+            zoomControl: true,
+            zoomControlOptions: {
+              position:
+                naver.maps
+                  .Position
+                  .TOP_RIGHT
+            },
+            mapTypeControl:
+              false,
+            scaleControl: true,
+            logoControl: true,
+            mapDataControl:
+              false
+          }
+        );
+
+      if (storedCoordinate) {
+        locationMarker =
+          new naver.maps.Marker(
+            {
+              position:
+                centerPosition,
+              map: boardMap,
+              icon:
+                createMarkerIcon(),
+              title:
+                "마지막 확인 위치"
+            }
+          );
+      }
+
+      const timeResult =
+        await fetchTimeResult();
+
+      if (timeResult) {
+        updateSearchSummary(
+          timeResult
+        );
+
+        createBoundaryPolygon(
+          timeResult
+        );
+
+        createPriorityCircles(
+          timeResult
+        );
+      }
+
+      window.setTimeout(
+        () => {
+          naver.maps.Event
+            .trigger(
+              boardMap,
+              "resize"
+            );
+
+          boardMap.setCenter(
+            centerPosition
+          );
+        },
+        100
+      );
+    };
+
+  const updateSearchSummary = (
+    timeResult
+  ) => {
+    if (
+      !timeResult ||
+      !Array.isArray(
+        timeResult.places
+      )
+    ) {
+      if (
+        priorityLocationElement
+      ) {
+        priorityLocationElement
+          .textContent =
+          "분석 결과 없음";
+      }
+
+      if (
+        searchProgressElement
+      ) {
+        searchProgressElement
+          .textContent =
+          "0 / 0곳 완료";
+      }
+
+      return;
+    }
+
+    const places =
+      timeResult.places;
+
+    const completedPlaces =
+      places.filter(
+        (place) =>
+          place.checked === true
+      );
+
+    const remainingPlaces =
+      places
+        .filter(
+          (place) =>
+            place.checked !== true
+        )
+        .sort(
+          (a, b) =>
+            Number(
+              a.priorityRank
+            ) -
+            Number(
+              b.priorityRank
+            )
+        );
+
+    if (
+      priorityLocationElement
+    ) {
+      priorityLocationElement
+        .textContent =
+        remainingPlaces.length > 0
+          ? remainingPlaces[0].name
+          : "모든 지역 확인 완료";
+    }
+
+    if (
+      searchProgressElement
+    ) {
+      searchProgressElement
+        .textContent =
+        `${completedPlaces.length} / ${places.length}곳 완료`;
+    }
+  };
+
+  const calculateElapsedTime =
+    () => {
+      if (
+        !elapsedTimeElement
+      ) {
+        return;
+      }
+
+      const searchData =
+        getStoredSearchData();
+
+      const lastSeenTime =
+        searchData.lastSeenTime ??
+        sessionStorage.getItem(
+          "lastSeenTime"
+        );
+
+      if (!lastSeenTime) {
+        elapsedTimeElement
+          .textContent = "-";
+
+        return;
+      }
+
+      const lastSeenDate =
+        new Date(
+          lastSeenTime
+        );
+
+      const currentDate =
+        new Date();
+
+      if (
+        Number.isNaN(
+          lastSeenDate.getTime()
+        )
+      ) {
+        elapsedTimeElement
+          .textContent = "-";
+
+        return;
+      }
+
+      const elapsedMilliseconds =
+        currentDate.getTime() -
+        lastSeenDate.getTime();
+
+      if (
+        elapsedMilliseconds < 0
+      ) {
+        elapsedTimeElement
+          .textContent = "-";
+
+        return;
+      }
+
+      const elapsedMinutes =
+        Math.floor(
+          elapsedMilliseconds /
+          60000
+        );
+
+      const elapsedHours =
+        Math.floor(
+          elapsedMinutes / 60
+        );
+
+      const remainingMinutes =
+        elapsedMinutes % 60;
+
+      if (
+        elapsedHours === 0
+      ) {
+        elapsedTimeElement
+          .textContent =
+          `${remainingMinutes}분`;
+
+        return;
+      }
+
+      elapsedTimeElement
+        .textContent =
+        `${elapsedHours}시간 ${remainingMinutes}분`;
+    };
+
+  const handleResultClick =
+    () => {
+      window.location.href =
+        "./search-result.html";
+    };
+
+  const handleNewSearchClick =
+    () => {
+      window.location.href =
+        "./search-form.html";
+    };
+
+  if (shareMapButton) {
+    shareMapButton
+      .addEventListener(
+        "click",
+        handleShareMapClick
+      );
+  }
+
+  if (resultButton) {
+    resultButton
+      .addEventListener(
+        "click",
+        handleResultClick
+      );
+  }
+
+  if (newSearchButton) {
+    newSearchButton
+      .addEventListener(
+        "click",
+        handleNewSearchClick
+      );
+  }
+
+  window.addEventListener(
+    "pageshow",
+    () => {
+      const shareToast =
+        document.querySelector(
+          ".share-copy-toast"
+        );
+
+      if (shareToast) {
+        shareToast.remove();
+      }
+
+      isSharing = false;
+    }
+  );
+
+  if (window.naverMapsReady) {
+    window.naverMapsReady
+      .then(() => {
+        initializeBoardMap();
+      })
+      .catch((error) => {
+        console.error(
+          "네이버 지도 초기화 실패:",
+          error
+        );
+      });
+  } else {
+    console.error(
+      "네이버 지도 로더를 찾을 수 없습니다."
+    );
+  }
+
+  calculateElapsedTime();
+})();

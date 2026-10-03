@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탐색보드 | Golden Step</title>
+  <link rel="icon" type="image/png" href="./assets/icons/favicon.png">
+  <link rel="stylesheet" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./css/search-board.css">
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="header-logo" href="./index.html">
+        <img src="./assets/images/golden-step-logo.png" alt="Golden Step">
+        <span class="header-tagline">
+          지금, 더 안전한 내일로
+        </span>
+      </a>
+      <button class="emergency-button" type="button" aria-label="112 긴급 신고"></button>
+    </div>
+  </header>
+  <main class="board-page">
+    <section class="board-container">
+      <div class="board-heading">
+        <span class="board-label">
+          SEARCH BOARD
+        </span>
+        <h1>탐색보드</h1>
+        <p>
+          경과 시간, 우선 확인 지역, 탐색 진행 현황을 한 화면에서 확인할 수 있습니다.
+        </p>
+      </div>
+      <section class="summary-grid" aria-label="탐색 요약 정보">
+        <article class="summary-card">
+          <div class="summary-icon summary-icon-time">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8"></circle>
+              <path d="M12 7V12L15.5 14"></path>
+            </svg>
+          </div>
+          <div class="summary-content">
+            <span class="summary-title">
+              경과 시간
+            </span>
+            <strong id="elapsed-time">
+              2시간 30분
+            </strong>
+          </div>
+        </article>
+        <article class="summary-card">
+          <div class="summary-icon summary-icon-location">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21S18.5 15 18.5 9.5A6.5 6.5 0 1 0 5.5 9.5C5.5 15 12 21 12 21Z"></path>
+              <circle cx="12" cy="9.5" r="2.2"></circle>
+            </svg>
+          </div>
+          <div class="summary-content">
+            <span class="summary-title">
+              우선 확인 지역
+            </span>
+            <strong id="priority-location">
+              분석 결과 대기
+            </strong>
+          </div>
+        </article>
+        <article class="summary-card">
+          <div class="summary-icon summary-icon-progress">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8"></circle>
+              <path d="M8.5 12L11 14.5L15.5 9.5"></path>
+            </svg>
+          </div>
+          <div class="summary-content">
+            <span class="summary-title">
+              탐색 진행 현황
+            </span>
+            <strong id="search-progress">
+              0 / 3곳 완료
+            </strong>
+          </div>
+        </article>
+      </section>
+      <section class="board-map-section">
+        <div class="map-heading">
+          <div>
+            <span class="section-label">
+              PRIORITY MAP
+            </span>
+            <h2>
+              탐색 우선 지역
+            </h2>
+          </div>
+          <div class="priority-legend">
+            <span>
+              <i class="legend-color legend-high"></i>
+              높음
+            </span>
+            <span>
+              <i class="legend-color legend-medium"></i>
+              중간
+            </span>
+            <span>
+              <i class="legend-color legend-low"></i>
+              낮음
+            </span>
+          </div>
+        </div>
+        <div class="map-placeholder">
+          <div id="board-map" class="board-map" role="application" aria-label="탐색 우선 지역 지도">
+          </div>
+          <div class="map-legend">
+            <span class="map-legend-title">
+              탐색 우선도
+            </span>
+            <div class="map-legend-items">
+              <span>
+                <i class="legend-color legend-high"></i>
+                높음
+              </span>
+              <span>
+                <i class="legend-color legend-medium"></i>
+                중간
+              </span>
+              <span>
+                <i class="legend-color legend-low"></i>
+                낮음
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="board-actions">
+        <button class="share-map-button" id="share-map-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <path d="M8.6 10.5L15.4 6.5"></path>
+            <path d="M8.6 13.5L15.4 17.5"></path>
+          </svg>
+          <span>현재 탐색 정보 공유하기</span>
+        </button>
+        <div class="board-sub-actions">
+          <button class="board-button result-button" id="result-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6L9 4L15 6L20 4V18L15 20L9 18L4 20V6Z"></path>
+              <path d="M9 4V18"></path>
+              <path d="M15 6V20"></path>
+            </svg>
+            <span>탐색결과 보기</span>
+          </button>
+          <button class="board-button new-search-button" id="new-search-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="5.5"></circle>
+              <path d="M15 15L20 20"></path>
+            </svg>
+            <span>새 탐색 시작</span>
+          </button>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="./js/common.js"></script>
+  <script src="./js/env-config.js"></script>
+  <script src="./js/naver-map-loader.js"></script>
+  <script src="./js/search-board.js"></script>
+</body>
+
+</html>

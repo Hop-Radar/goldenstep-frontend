@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Golden Step</title>
+  <link rel="icon" type="image/png" href="./assets/icons/favicon.png">
+  <link rel="stylesheet" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./css/main.css">
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="header-logo" href="./index.html">
+        <img src="./assets/images/golden-step-logo.png" alt="Golden Step">
+        <span class="header-tagline">
+          지금, 더 안전한 내일로
+        </span>
+      </a>
+
+      <button class="emergency-button" type="button" aria-label="112 긴급 신고"></button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <div class="hero-overlay"></div>
+
+      <div class="hero-content">
+        <p class="hero-eyebrow">
+          DATA-DRIVEN SEARCH SUPPORT
+        </p>
+
+        <h1 class="hero-title">
+          데이터로 만드는<br>
+          더 빠른 탐색의 시작,
+          <strong>Golden Step</strong>
+        </h1>
+
+        <p class="hero-description">
+          마지막 확인 위치와 경과 시간 등의 데이터를 분석하여<br>
+          이동 가능 범위와 우선 확인 지역을 안내하는
+          <strong>탐색 지원 서비스</strong>입니다.
+        </p>
+
+        <div class="hero-notice">
+          <div class="notice-icon" aria-hidden="true">i</div>
+
+          <div class="notice-content">
+            <p class="notice-title">
+              Golden Step은 실종된 사람을 직접 찾거나 구조하는 서비스가 아닙니다.
+            </p>
+
+            <p class="notice-description">
+              데이터 분석을 통해 탐색 범위를 좁히고, 우선 확인 지역을 안내하는 서비스입니다.
+            </p>
+          </div>
+        </div>
+
+        <button class="hero-button" id="search-start-button" type="button">
+          <span>탐색 시작</span>
+          <span class="hero-button-arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="safety-modal" id="safety-modal">
+    <div class="safety-modal-backdrop"></div>
+
+    <section class="safety-modal-content" role="dialog" aria-modal="true" aria-labelledby="safety-modal-title">
+
+      <button class="safety-modal-close" id="safety-modal-close" type="button" aria-label="안전 안내 창 닫기">
+        ×
+      </button>
+      <div class="safety-shield" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3L19 6V11C19 15.8 16.1 19.4 12 21C7.9 19.4 5 15.8 5 11V6L12 3Z"></path>
+          <path d="M12 8V15"></path>
+          <path d="M9 11.5H15"></path>
+        </svg>
+      </div>
+
+      <h2 id="safety-modal-title">
+        안전한 탐색을 위해<br>
+        <strong>꼭 확인해주세요</strong>
+      </h2>
+
+      <p class="safety-intro">
+        Golden Step은 데이터 분석을 통해 우선 확인 지역을 안내하는 탐색 지원 서비스입니다.
+        안전 수칙을 빠짐없이 숙지하고 활용해주세요.
+      </p>
+
+      <div class="safety-notice-list">
+
+        <article class="safety-notice-card safety-notice-danger">
+          <div class="safety-notice-icon" aria-hidden="true">!</div>
+
+          <div>
+            <strong>직접 탐색은 항상 안전을 최우선으로 하세요.</strong>
+            <p>
+              위험한 지역이나 야간 단독 탐색은 지양하고,
+              가능한 2인 이상 함께 이동하세요.
+            </p>
+          </div>
+        </article>
+
+        <article class="safety-notice-card safety-notice-report">
+          <div class="safety-notice-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="8" cy="8" r="3"></circle>
+              <circle cx="16" cy="8" r="3"></circle>
+              <path d="M2.5 19C2.5 15.7 4.9 13.5 8 13.5"></path>
+              <path d="M21.5 19C21.5 15.7 19.1 13.5 16 13.5"></path>
+              <path d="M8 19C8 15.8 9.6 14 12 14C14.4 14 16 15.8 16 19"></path>
+            </svg>
+          </div>
+
+          <div>
+            <strong>관계 기관에 즉시 신고해 주세요.</strong>
+            <p>
+              실종이 의심되는 경우 지체하지 말고 경찰(112)에 신고하고,
+              본 서비스는 추가적인 탐색 지원 도구로 활용해주세요.
+            </p>
+          </div>
+        </article>
+
+        <article class="safety-notice-card safety-notice-info">
+          <div class="safety-notice-icon" aria-hidden="true">i</div>
+
+          <div>
+            <strong>안내 결과는 참고용으로 활용하세요.</strong>
+            <p>
+              분석 결과는 제한된 데이터를 기반으로 예측된 정보이며,
+              실제 위치와 다를 수 있습니다.
+            </p>
+          </div>
+        </article>
+
+      </div>
+
+      <button class="safety-confirm-button" id="safety-confirm-button" type="button">
+        <span>확인하고 시작하기</span>
+        <span aria-hidden="true">→</span>
+      </button>
+
+    </section>
+  </div>
+
+  <script src="./js/common.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+
+</html>
