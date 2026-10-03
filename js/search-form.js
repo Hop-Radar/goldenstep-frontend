@@ -2012,6 +2012,7 @@ const handleSearchFormSubmit = async (
 initializeTimeOptions();
 initializeAgeOptions();
 initializeLastSeenDate();
+openPersonDetails();
 
 if (window.naverMapsReady) {
   window.naverMapsReady

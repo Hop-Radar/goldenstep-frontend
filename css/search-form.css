@@ -153,6 +153,21 @@
   position: relative;
 }
 
+.location-search-guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 6px;
+  color: #718198;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.location-search-guide span {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
 .location-search-button {
   position: absolute;
   top: 50%;
