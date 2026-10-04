@@ -86,8 +86,6 @@
     "#confirm-search-end-button"
   );
 
-  const API_BASE_URL = "";
-
   let currentSearchSession = null;
 
   const TIME_POINTS = [
@@ -331,7 +329,9 @@
     selectedIndex
   ) => {
     const response = await fetch(
-      `${API_BASE_URL}/api/search/analysis/${runId}/results/${timePoint}`,
+      window.GoldenStepApi.getApiUrl(
+        `/api/search/analysis/${runId}/results/${timePoint}`
+      ),
       {
         method: "POST",
         credentials: "include",
@@ -384,7 +384,9 @@
     }
 
     const response = await fetch(
-      `${API_BASE_URL}/api/search/analysis/${runId}/results/${timePoint}`,
+      window.GoldenStepApi.getApiUrl(
+        `/api/search/analysis/${runId}/results/${timePoint}`
+      ),
       {
         method: "GET",
         credentials: "include",
@@ -2511,7 +2513,9 @@
 
       const response =
         await fetch(
-          `${API_BASE_URL}/api/search/places/${location.placeId}/check`,
+          window.GoldenStepApi.getApiUrl(
+            `/api/search/places/${location.placeId}/check`
+          ),
           {
             method: "POST",
             credentials: "include",
@@ -2979,7 +2983,9 @@
       try {
         const response =
           await fetch(
-            `${API_BASE_URL}/api/search/analysis/${runId}`,
+            window.GoldenStepApi.getApiUrl(
+              `/api/search/analysis/${runId}`
+            ),
             {
               method: "GET",
               credentials:

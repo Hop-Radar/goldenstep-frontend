@@ -3,7 +3,6 @@ const progressValue = document.querySelector("#progress-value");
 const progressTrack = document.querySelector(".progress-track");
 const analysisSteps = document.querySelectorAll(".analysis-step");
 
-const API_BASE_URL = "";
 const STATUS_CHECK_INTERVAL = 1000;
 const MAX_ANALYSIS_TIME = 120000;
 const WAITING_PROGRESS_DURATION = 60000;
@@ -316,7 +315,9 @@ const checkAnalysisStatus = async () => {
 
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/search/analysis/${runId}`,
+      window.GoldenStepApi.getApiUrl(
+        `/api/search/analysis/${runId}`
+      ),
       {
         method: "GET",
         credentials: "include"

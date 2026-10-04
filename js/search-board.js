@@ -1,6 +1,4 @@
 (() => {
-  const API_BASE_URL = "";
-
   const boardMapElement =
     document.querySelector(
       "#board-map"
@@ -198,7 +196,9 @@
       try {
         const response =
           await fetch(
-            `${API_BASE_URL}/api/search/analysis/${runId}/results/${timePoint}`,
+            window.GoldenStepApi.getApiUrl(
+              `/api/search/analysis/${runId}/results/${timePoint}`
+            ),
             {
               method: "GET",
               credentials: "include"
@@ -235,82 +235,77 @@
       }
     };
 
-  const encodeShareData = (
-    data
-  ) => {
-    const json =
-      JSON.stringify(data);
-
-    const bytes =
-      new TextEncoder().encode(
-        json
+  const createShareUrl = async () => {
+    const runId =
+      sessionStorage.getItem(
+        "goldenStepRunId"
       );
 
-    let binary = "";
-
-    bytes.forEach((byte) => {
-      binary +=
-        String.fromCharCode(byte);
-    });
-
-    return btoa(binary)
-      .replaceAll("+", "-")
-      .replaceAll("/", "_")
-      .replaceAll("=", "");
-  };
-
-  const createShareUrl = async () => {
-    const searchData =
-      getStoredSearchData();
-
-    const storedCoordinate =
-      getStoredCoordinate();
-
-    const timeResult =
-      await fetchTimeResult();
-
-    const selectedMinutes =
-      getSelectedMinutes();
+    if (!runId) {
+      throw new Error(
+        "탐색 세션 정보를 찾을 수 없습니다."
+      );
+    }
 
     const timePoint =
       getTimePoint();
 
-    const shareData = {
-      ...searchData,
-      selectedMinutes,
-      timePoint,
-      boundaryZone:
-        timeResult?.boundaryZone ??
-        null,
-      priorityPlaces:
-        Array.isArray(
-          timeResult?.places
-        )
-          ? timeResult.places
-          : []
-    };
+    const response =
+      await fetch(
+        window.GoldenStepApi.getApiUrl(
+          "/api/search/snapshots"
+        ),
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            runId,
+            timePoint
+          })
+        }
+      );
 
-    if (storedCoordinate) {
-      shareData.latitude =
-        storedCoordinate.latitude;
-
-      shareData.longitude =
-        storedCoordinate.longitude;
+    if (!response.ok) {
+      throw new Error(
+        "공유 스냅샷 생성에 실패했습니다."
+      );
     }
 
-    const encodedData =
-      encodeShareData(shareData);
+    const snapshot =
+      await response.json();
+
+    if (!snapshot.shareUrl) {
+      throw new Error(
+        "공유 링크를 받지 못했습니다."
+      );
+    }
 
     const shareUrl =
       new URL(
-        "./share-map.html",
+        snapshot.shareUrl,
         window.location.href
       );
 
-    shareUrl.searchParams.set(
-      "data",
-      encodedData
-    );
+    const hashParams =
+      new URLSearchParams(
+        shareUrl.hash.startsWith("#")
+          ? shareUrl.hash.slice(1)
+          : shareUrl.hash
+      );
+
+    const shareToken =
+      hashParams.get("token");
+
+    if (shareToken) {
+      sessionStorage.setItem(
+        "goldenStepOwnedShareToken",
+        shareToken
+      );
+    }
 
     return shareUrl.toString();
   };
@@ -477,43 +472,57 @@
 
       isSharing = true;
 
-      const shareUrl =
-        await createShareUrl();
-
       try {
-        await copyText(
-          shareUrl
-        );
+        const shareUrl =
+          await createShareUrl();
 
-        showShareToast(
-          "공유 링크가 복사되었습니다."
-        );
+        try {
+          await copyText(
+            shareUrl
+          );
 
-        window.setTimeout(
-          () => {
-            window.location.href =
-              shareUrl;
-          },
-          900
-        );
+          showShareToast(
+            "공유 링크가 복사되었습니다."
+          );
+
+          window.setTimeout(
+            () => {
+              window.location.href =
+                shareUrl;
+            },
+            900
+          );
+        } catch (error) {
+          console.error(
+            "Share link copy error:",
+            error
+          );
+
+          showShareToast(
+            "링크 복사에 실패했습니다. 공유 화면으로 이동합니다.",
+            true
+          );
+
+          window.setTimeout(
+            () => {
+              window.location.href =
+                shareUrl;
+            },
+            1200
+          );
+        }
       } catch (error) {
         console.error(
-          "Share link copy error:",
+          "Share snapshot creation error:",
           error
         );
 
         showShareToast(
-          "링크 복사에 실패했습니다. 공유 화면으로 이동합니다.",
+          "공유 링크 생성에 실패했습니다. 잠시 후 다시 시도해주세요.",
           true
         );
 
-        window.setTimeout(
-          () => {
-            window.location.href =
-              shareUrl;
-          },
-          1200
-        );
+        isSharing = false;
       }
     };
 

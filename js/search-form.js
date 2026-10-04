@@ -849,7 +849,9 @@ const renderLocationSearchResults = (
 
 const searchPlaces = async (query) => {
   const response = await fetch(
-    `/api/maps/places?query=${encodeURIComponent(query)}`,
+    window.GoldenStepApi.getApiUrl(
+      `/api/maps/places?query=${encodeURIComponent(query)}`
+    ),
     {
       method: "GET",
       credentials: "include"
@@ -1808,7 +1810,9 @@ const requestSearchAnalysis = async (
 
   const response =
     await fetch(
-      "/api/search/input",
+      window.GoldenStepApi.getApiUrl(
+        "/api/search/input"
+      ),
       {
         method: "POST",
         headers: {
